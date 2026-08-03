@@ -32,18 +32,24 @@ async function getCategories() {
 }
 
 export default function Home() {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
 
   useEffect(() => {
     async function getInitialData() {
+      setIsLoading(true);
       const data = await getCategories();
       setCategories(data);
+      setIsLoading(false);
     }
 
     getInitialData();
   }, []);
+
+  if (isLoading) return <p>로딩중</p>;
 
   return (
     <div>
@@ -54,7 +60,7 @@ export default function Home() {
             <li>
               <input
                 type='text'
-                value={isEdit ? editValue : category.name}
+                value={isEdit ? editValue : category.normalizedName}
                 disabled={!isEdit}
                 onChange={(e) => {
                   setEditValue(e.target.value);
@@ -65,8 +71,13 @@ export default function Home() {
                 className='ml-2'
                 onClick={async () => {
                   if (isEdit) {
+                    if (editValue.trim() === "") return;
+                    if (editValue === category.normalizedName)
+                      return setEditingId(null);
+
                     if (category.name !== editValue) {
                       try {
+                        setIsSaving(true);
                         const updatedCategory = await updateCategory({
                           id: category.id,
                           name: editValue,
@@ -84,17 +95,19 @@ export default function Home() {
                       } catch (error) {
                         console.log(error);
                         return;
+                      } finally {
+                        setIsSaving(false);
                       }
                     }
 
                     setEditingId(null);
                   } else {
                     setEditingId(category.id);
-                    setEditValue(category.name);
+                    setEditValue(category.normalizedName);
                   }
                 }}
               >
-                {isEdit ? "저장" : "수정"}
+                {isEdit && isSaving ? "저장중" : isEdit ? "저장" : "수정"}
               </button>
             </li>
           );

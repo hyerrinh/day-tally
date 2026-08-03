@@ -7,6 +7,9 @@ export async function PATCH(
   const body = await request.json();
   const { id } = await params;
 
+  if (body.trim() === "")
+    return Response.json({ message: "api : 카테고리 빈 값" });
+
   const category = await prisma.category.update({
     where: {
       id,
