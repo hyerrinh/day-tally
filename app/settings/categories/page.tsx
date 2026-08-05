@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Category } from "../../generated/prisma/client";
+import CategoryItem from "./_components/CategoryItem";
+import { Prisma } from "@/app/generated/prisma/client";
+
+export type CategoryWithActions = Prisma.CategoryGetPayload<{
+	include: {
+		actions: true;
+	};
+}>;
 
 async function updateCategory({ id, name }: { id: string; name: string }) {
 	const res = await fetch(`/api/categories/${id}`, {
@@ -32,9 +39,27 @@ async function getCategories() {
 	return data;
 }
 
+async function postAction({ categoryId, name }: { categoryId: string; name: string }) {
+	const res = await fetch(`/api/categories/${categoryId}/actions`, {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({ name }),
+	});
+
+	const data = await res.json();
+
+	if (!res.ok) {
+		throw new Error(data.message ?? "액션 추가 실패");
+	}
+
+	return data;
+}
+
 const SettingCategory = () => {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
-	const [categories, setCategories] = useState<Category[]>([]);
+	const [categories, setCategories] = useState<CategoryWithActions[]>([]);
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [savedId, setSavedId] = useState<string | null>(null);
 	const [editValue, setEditValue] = useState("");
@@ -91,6 +116,38 @@ const SettingCategory = () => {
 
 	const onDelete = (id: string) => {};
 
+	const addAction = async ({ categoryId, name }: { categoryId: string; name: string }) => {
+		const trimmedName = name.trim();
+
+		if (trimmedName === "") {
+			alert("new action : 빈 값");
+			return false;
+		}
+		try {
+			const newAction = await postAction({ categoryId, name: trimmedName });
+
+			setCategories((prev) =>
+				prev.map((category) =>
+					categoryId === category.id
+						? { ...category, actions: [...category.actions, newAction] }
+						: category,
+				),
+			);
+
+			return true;
+		} catch (e) {
+			if (e instanceof Error) {
+				alert(e.message);
+			}
+			return false;
+		}
+	};
+
+	const onActionEdit = ({ id, name }: { id: string; name: string }) => {};
+
+	const onActionSave = ({ id, name }: { id: string; name: string }) => {};
+	const onActionDelete = (id: string) => {};
+
 	if (isLoading) return <p>로딩중</p>;
 
 	return (
@@ -99,32 +156,21 @@ const SettingCategory = () => {
 				<button>+ 카테고리</button>
 				<button>순서 변경</button>
 			</div>
-
 			<ul>
-				{categories.map((cat) => {
-					const { id, name } = cat;
-					return (
-						<li key={id} className="border p-2 mb-2">
-							<div className="flex justify-between items-center">
-								<input
-									type="text"
-									disabled={id !== editingId}
-									value={id !== editingId ? name : editValue}
-									onChange={(e) => setEditValue(e.target.value)}
-								/>
-								<button
-									type="button"
-									onClick={() => (id !== editingId ? onEdit({ id, name }) : onSave({ id, name }))}
-								>
-									{id === savedId ? "저장중" : id === editingId ? "저장" : "수정"}
-								</button>
-								<button type="button" onClick={() => onDelete(id)}>
-									삭제
-								</button>
-							</div>
-						</li>
-					);
-				})}
+				{categories.map((cat) => (
+					<CategoryItem
+						key={cat.id}
+						cat={cat}
+						editValue={editValue}
+						editingId={editingId}
+						savedId={savedId}
+						onSave={onSave}
+						onEdit={onEdit}
+						onDelete={onDelete}
+						onEditValue={setEditValue}
+						addAction={addAction}
+					/>
+				))}
 			</ul>
 		</div>
 	);
