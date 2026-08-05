@@ -2,52 +2,61 @@
 import type { Action } from "@/app/generated/prisma/client";
 import { useState } from "react";
 import { CategoryWithActions } from "../page";
+import ActionItem from "./ActionItem";
 
 type CategoryItemProps = {
 	cat: CategoryWithActions;
-	editValue: string;
-	editingId: string | null;
-	savedId: string | null;
-	onSave: ({ id, name }: { id: string; name: string }) => void;
-	onEdit: ({ id, name }: { id: string; name: string }) => void;
-	onDelete: (id: string) => void;
-	onEditValue: (value: string) => void;
-	addAction: ({ categoryId, name }: { categoryId: string; name: string }) => Promise<boolean>;
+	onSaveCategory: ({ id, name }: { id: string; name: string }) => Promise<boolean>;
+	onDeleteCategory: (id: string) => Promise<boolean>;
+	onAddAction: ({ categoryId, name }: { categoryId: string; name: string }) => Promise<boolean>;
+	onSaveAction: ({ id, name }: { id: string; name: string }) => Promise<boolean>;
+	onDeleteAction: (id: string) => Promise<boolean>;
 };
 
 const CategoryItem = ({
 	cat,
-	editValue,
-	editingId,
-	savedId,
-	onSave,
-	onEdit,
-	onDelete,
-	onEditValue,
-	addAction,
+	onSaveCategory,
+	onDeleteCategory,
+	onAddAction,
+	onSaveAction,
+	onDeleteAction,
 }: CategoryItemProps) => {
-	const [editingActionId, setEditingActionId] = useState<string | null>(null);
-	const [savedActionId, setSavedActionId] = useState<string | null>(null);
-	const [editActionValue, setEditActionValue] = useState("");
-	const [isAddingAction, setIsAddingAction] = useState<boolean>(false);
+	const [isEditing, setIsEditing] = useState<boolean>(false);
+	const [isSaving, setIsSaving] = useState<boolean>(false);
+	const [editValue, setEditValue] = useState("");
 	const [newActionName, setNewActionName] = useState<string>("");
+	const [isAddingAction, setIsAddingAction] = useState<boolean>(false);
 
 	const handleAddAction = async ({ categoryId, name }: { categoryId: string; name: string }) => {
-		const isSuccess = await addAction({ categoryId, name });
+		const isSuccess = await onAddAction({ categoryId, name });
 		if (isSuccess) {
 			setIsAddingAction(true);
 		} else setIsAddingAction(false);
 	};
 
+	const handleSaveCategory = async ({ id, name }: { id: string; name: string }) => {
+		setIsSaving(true);
+		const isSuccess = await onSaveCategory({ id, name });
+		setIsSaving(false);
+
+		if (!isSuccess) alert("category 저장 실패");
+	};
+	const handleDeleteCategory = async (id: string) => {
+		const isSuccess = await onDeleteCategory(id);
+
+		if (isSuccess) alert("category 삭제 성공");
+		else alert("category 삭제 실패");
+	};
+
 	return (
 		<li>
 			<div className="flex justify-between items-center border p-2">
-				{cat.id === editingId ? (
+				{isEditing ? (
 					<input
 						type="text"
-						disabled={cat.id !== editingId}
-						value={cat.id !== editingId ? cat.name : editValue}
-						onChange={(e) => onEditValue(e.target.value)}
+						disabled={!isEditing}
+						value={!isEditing ? cat.name : editValue}
+						onChange={(e) => setEditValue(e.target.value)}
 					/>
 				) : (
 					<button type="button">{cat.name}</button>
@@ -55,53 +64,24 @@ const CategoryItem = ({
 				<button
 					type="button"
 					onClick={() =>
-						cat.id !== editingId
-							? onEdit({ id: cat.id, name: cat.name })
-							: onSave({ id: cat.id, name: cat.name })
+						!isEditing ? setIsEditing(false) : handleSaveCategory({ id: cat.id, name: cat.name })
 					}
 				>
-					{cat.id === savedId ? "저장중" : cat.id === editingId ? "저장" : "수정"}
+					{isSaving ? "저장중" : isEditing ? "저장" : "수정"}
 				</button>
-				<button type="button" onClick={() => onDelete(cat.id)}>
+				<button type="button" onClick={() => handleDeleteCategory(cat.id)}>
 					삭제
 				</button>
 			</div>
 			<ul>
-				{cat.actions?.map((action: Action) => {
-					return (
-						<li key={action.id} className="border p-2">
-							<div className="flex justify-between items-center">
-								{action.id === editingActionId ? (
-									<input
-										type="text"
-										disabled={action.id !== editingActionId}
-										value={action.id !== editingActionId ? action.name : editActionValue}
-										onChange={(e) => setEditActionValue(e.target.value)}
-									/>
-								) : (
-									<button type="button">{action.name}</button>
-								)}
-								<button
-									type="button"
-									onClick={() =>
-										action.id !== editingActionId
-											? onActionEdit({ id: action.id, name: action.name })
-											: onActionSave({ id: action.id, name: action.name })
-									}
-								>
-									{action.id === savedActionId
-										? "저장중"
-										: action.id === editingActionId
-											? "저장"
-											: "수정"}
-								</button>
-								<button type="button" onClick={() => onActionDelete(action.id)}>
-									삭제
-								</button>
-							</div>
-						</li>
-					);
-				})}
+				{cat.actions?.map((action: Action) => (
+					<ActionItem
+						key={action.id}
+						action={action}
+						onSaveAction={onSaveAction}
+						onDeleteAction={onDeleteAction}
+					/>
+				))}
 				<li>
 					{!isAddingAction ? (
 						<button

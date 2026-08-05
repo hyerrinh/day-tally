@@ -57,12 +57,27 @@ async function postAction({ categoryId, name }: { categoryId: string; name: stri
 	return data;
 }
 
+async function deleteCategory(id: string) {
+	const res = await fetch("/api/categories", {
+		method: "DELETE",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(id),
+	});
+
+	const data = await res.json();
+
+	if (!res.ok) {
+		throw new Error(data.message ?? "delete category 실패");
+	}
+
+	return data;
+}
+
 const SettingCategory = () => {
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [categories, setCategories] = useState<CategoryWithActions[]>([]);
-	const [editingId, setEditingId] = useState<string | null>(null);
-	const [savedId, setSavedId] = useState<string | null>(null);
-	const [editValue, setEditValue] = useState("");
 
 	useEffect(() => {
 		async function loadCategories() {
@@ -82,50 +97,48 @@ const SettingCategory = () => {
 		loadCategories();
 	}, []);
 
-	const onEdit = ({ id, name }: { id: string; name: string }) => {
-		console.log("onEdit");
-		setEditingId(id);
-		setEditValue(name);
-	};
-
-	const onSave = async ({ id, name }: { id: string; name: string }) => {
-		const trimmedName = editValue.trim();
-
-		if (trimmedName === "") return;
+	const saveCategory = async ({ id, name }: { id: string; name: string }) => {
+		const trimmedName = name.trim();
+		if (trimmedName === "") return false;
 		if (trimmedName === name) {
 			alert("category : 이전과 동일한 이름");
-			return;
+			return false;
 		}
-
-		setSavedId(id);
 		try {
 			console.log("저장클릭");
 			const newCategory = await updateCategory({ id, name: trimmedName });
 			setCategories((prev) => {
 				return prev.map((cat) => (cat.id === newCategory.id ? newCategory : cat));
 			});
-			setEditingId(null);
+			return true;
 		} catch (e) {
 			if (e instanceof Error) {
 				alert(e.message);
 			}
-		} finally {
-			setSavedId(null);
 		}
+		return false;
 	};
-
-	const onDelete = (id: string) => {};
+	const removeCategory = async (id: string) => {
+		try {
+			const deleted = await deleteCategory(id);
+			setCategories((prev) => prev.filter((cat) => cat.id !== deleted.id));
+			return true;
+		} catch (e) {
+			if (e instanceof Error) {
+				alert(e.message);
+			}
+		}
+		return false;
+	};
 
 	const addAction = async ({ categoryId, name }: { categoryId: string; name: string }) => {
 		const trimmedName = name.trim();
-
 		if (trimmedName === "") {
 			alert("new action : 빈 값");
 			return false;
 		}
 		try {
 			const newAction = await postAction({ categoryId, name: trimmedName });
-
 			setCategories((prev) =>
 				prev.map((category) =>
 					categoryId === category.id
@@ -133,7 +146,6 @@ const SettingCategory = () => {
 						: category,
 				),
 			);
-
 			return true;
 		} catch (e) {
 			if (e instanceof Error) {
@@ -142,11 +154,12 @@ const SettingCategory = () => {
 			return false;
 		}
 	};
-
-	const onActionEdit = ({ id, name }: { id: string; name: string }) => {};
-
-	const onActionSave = ({ id, name }: { id: string; name: string }) => {};
-	const onActionDelete = (id: string) => {};
+	const saveAction = async ({ id, name }: { id: string; name: string }) => {
+		return false;
+	};
+	const removeAction = async (id: string) => {
+		return false;
+	};
 
 	if (isLoading) return <p>로딩중</p>;
 
@@ -161,14 +174,11 @@ const SettingCategory = () => {
 					<CategoryItem
 						key={cat.id}
 						cat={cat}
-						editValue={editValue}
-						editingId={editingId}
-						savedId={savedId}
-						onSave={onSave}
-						onEdit={onEdit}
-						onDelete={onDelete}
-						onEditValue={setEditValue}
-						addAction={addAction}
+						onSaveCategory={saveCategory}
+						onDeleteCategory={removeCategory}
+						onAddAction={addAction}
+						onSaveAction={saveAction}
+						onDeleteAction={removeAction}
 					/>
 				))}
 			</ul>
