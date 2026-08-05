@@ -76,13 +76,12 @@ async function deleteCategory(id: string) {
 }
 
 const SettingCategory = () => {
-	const [isLoading, setIsLoading] = useState<boolean>(false);
+	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [categories, setCategories] = useState<CategoryWithActions[]>([]);
 
 	useEffect(() => {
 		async function loadCategories() {
 			try {
-				setIsLoading(true);
 				const data = await getCategories();
 				setCategories(data);
 			} catch (error) {
