@@ -36,3 +36,5 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 	return Response.json(category);
 }
+
+export async function Delete() {}

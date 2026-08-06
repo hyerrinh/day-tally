@@ -6,11 +6,19 @@ import ActionItem from "./ActionItem";
 
 type CategoryItemProps = {
 	cat: CategoryWithActions;
-	onSaveCategory: ({ id, name }: { id: string; name: string }) => Promise<boolean>;
-	onDeleteCategory: (id: string) => Promise<boolean>;
-	onAddAction: ({ categoryId, name }: { categoryId: string; name: string }) => Promise<boolean>;
-	onSaveAction: ({ id, name }: { id: string; name: string }) => Promise<boolean>;
-	onDeleteAction: (id: string) => Promise<boolean>;
+	onSaveCategory: ({ id, name }: { id: string; name: string }) => Promise<void>;
+	onDeleteCategory: (id: string) => Promise<void>;
+	onAddAction: ({ categoryId, name }: { categoryId: string; name: string }) => Promise<void>;
+	onSaveAction: ({
+		id,
+		categoryId,
+		name,
+	}: {
+		id: string;
+		categoryId: string;
+		name: string;
+	}) => Promise<void>;
+	onDeleteAction: ({ id, categoryId }: { id: string; categoryId: string }) => Promise<void>;
 };
 
 const CategoryItem = ({
@@ -23,29 +31,61 @@ const CategoryItem = ({
 }: CategoryItemProps) => {
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [isSaving, setIsSaving] = useState<boolean>(false);
+	const [isDeleting, setIsDeleting] = useState(false);
 	const [editValue, setEditValue] = useState("");
 	const [newActionName, setNewActionName] = useState<string>("");
 	const [isAddingAction, setIsAddingAction] = useState<boolean>(false);
 
-	const handleAddAction = async ({ categoryId, name }: { categoryId: string; name: string }) => {
-		const isSuccess = await onAddAction({ categoryId, name });
-		if (isSuccess) {
-			setIsAddingAction(true);
-		} else setIsAddingAction(false);
-	};
-
 	const handleSaveCategory = async ({ id, name }: { id: string; name: string }) => {
-		setIsSaving(true);
-		const isSuccess = await onSaveCategory({ id, name });
-		setIsSaving(false);
+		const trimmedName = name.trim();
+		if (trimmedName === "") return;
+		if (trimmedName === name) {
+			alert("category : 이전과 동일한 이름");
+			return;
+		}
 
-		if (!isSuccess) alert("category 저장 실패");
+		try {
+			setIsSaving(true);
+			await onSaveCategory({ id, name });
+		} catch (e) {
+			if (e instanceof Error) {
+				alert(e.message);
+			}
+		} finally {
+			setIsSaving(false);
+		}
 	};
-	const handleDeleteCategory = async (id: string) => {
-		const isSuccess = await onDeleteCategory(id);
 
-		if (isSuccess) alert("category 삭제 성공");
-		else alert("category 삭제 실패");
+	const handleDeleteCategory = async (id: string) => {
+		try {
+			setIsDeleting(true);
+			await onDeleteCategory(id);
+		} catch (e) {
+			if (e instanceof Error) {
+				alert(e.message);
+			}
+		} finally {
+			setIsDeleting(false);
+		}
+	};
+
+	const handleAddAction = async ({ categoryId, name }: { categoryId: string; name: string }) => {
+		const trimmedName = name.trim();
+		if (trimmedName === "") {
+			alert("new action : 빈 값");
+			return;
+		}
+
+		try {
+			setIsAddingAction(true);
+			await onAddAction({ categoryId, name });
+		} catch (e) {
+			if (e instanceof Error) {
+				alert(e.message);
+			}
+		} finally {
+			setIsAddingAction(false);
+		}
 	};
 
 	return (
@@ -76,6 +116,7 @@ const CategoryItem = ({
 			<ul>
 				{cat.actions?.map((action: Action) => (
 					<ActionItem
+						categoryId={cat.id}
 						key={action.id}
 						action={action}
 						onSaveAction={onSaveAction}

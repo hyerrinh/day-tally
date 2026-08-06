@@ -10,6 +10,17 @@ export type CategoryWithActions = Prisma.CategoryGetPayload<{
 	};
 }>;
 
+async function getCategories() {
+	const res = await fetch("/api/categories");
+	const data = await res.json();
+
+	if (!res.ok) {
+		throw new Error(data.message ?? "카테고리 로드 실패");
+	}
+
+	return data;
+}
+
 async function updateCategory({ id, name }: { id: string; name: string }) {
 	const res = await fetch(`/api/categories/${id}`, {
 		method: "PATCH",
@@ -28,12 +39,15 @@ async function updateCategory({ id, name }: { id: string; name: string }) {
 	return data;
 }
 
-async function getCategories() {
-	const res = await fetch("/api/categories");
+async function deleteCategory(id: string) {
+	const res = await fetch(`/api/categories/${id}`, {
+		method: "DELETE",
+	});
+
 	const data = await res.json();
 
 	if (!res.ok) {
-		throw new Error(data.message ?? "카테고리 로드 실패");
+		throw new Error(data.message ?? "delete category 실패");
 	}
 
 	return data;
@@ -57,19 +71,31 @@ async function postAction({ categoryId, name }: { categoryId: string; name: stri
 	return data;
 }
 
-async function deleteCategory(id: string) {
-	const res = await fetch("/api/categories", {
-		method: "DELETE",
+async function updateAction({ id, name }: { id: string; name: string }) {
+	const res = await fetch(`/api/actions/${id}`, {
+		method: "PATCH",
 		headers: {
-			"Content-Type": "application/json",
+			"Content-Type": "application/jsion",
 		},
-		body: JSON.stringify(id),
+		body: JSON.stringify({ name }),
+	});
+
+	const data = res.json();
+
+	if (!res.ok) throw new Error("update action 실패");
+
+	return data;
+}
+
+async function deleteAction(id: string) {
+	const res = await fetch(`/api/actions/${id}`, {
+		method: "DElETE",
 	});
 
 	const data = await res.json();
 
 	if (!res.ok) {
-		throw new Error(data.message ?? "delete category 실패");
+		throw new Error(data.message ?? "action 삭제 실패");
 	}
 
 	return data;
@@ -96,68 +122,59 @@ const SettingCategory = () => {
 		loadCategories();
 	}, []);
 
+	const addCategory = async () => {};
 	const saveCategory = async ({ id, name }: { id: string; name: string }) => {
-		const trimmedName = name.trim();
-		if (trimmedName === "") return false;
-		if (trimmedName === name) {
-			alert("category : 이전과 동일한 이름");
-			return false;
-		}
-		try {
-			console.log("저장클릭");
-			const newCategory = await updateCategory({ id, name: trimmedName });
-			setCategories((prev) => {
-				return prev.map((cat) => (cat.id === newCategory.id ? newCategory : cat));
-			});
-			return true;
-		} catch (e) {
-			if (e instanceof Error) {
-				alert(e.message);
-			}
-		}
-		return false;
+		const updatedCategory = await updateCategory({ id, name });
+		setCategories((prev) => {
+			return prev.map((cat) => (cat.id === updatedCategory.id ? updatedCategory : cat));
+		});
 	};
 	const removeCategory = async (id: string) => {
-		try {
-			const deleted = await deleteCategory(id);
-			setCategories((prev) => prev.filter((cat) => cat.id !== deleted.id));
-			return true;
-		} catch (e) {
-			if (e instanceof Error) {
-				alert(e.message);
-			}
-		}
-		return false;
+		await deleteCategory(id);
+		setCategories((prev) => prev.filter((cat) => cat.id !== id));
 	};
-
 	const addAction = async ({ categoryId, name }: { categoryId: string; name: string }) => {
-		const trimmedName = name.trim();
-		if (trimmedName === "") {
-			alert("new action : 빈 값");
-			return false;
-		}
-		try {
-			const newAction = await postAction({ categoryId, name: trimmedName });
-			setCategories((prev) =>
-				prev.map((category) =>
-					categoryId === category.id
-						? { ...category, actions: [...category.actions, newAction] }
-						: category,
-				),
-			);
-			return true;
-		} catch (e) {
-			if (e instanceof Error) {
-				alert(e.message);
-			}
-			return false;
-		}
+		const newAction = await postAction({ categoryId, name });
+		setCategories((prev) =>
+			prev.map((category) =>
+				category.id === newAction.categoryId
+					? { ...category, actions: [...category.actions, newAction] }
+					: category,
+			),
+		);
 	};
-	const saveAction = async ({ id, name }: { id: string; name: string }) => {
-		return false;
+	const saveAction = async ({
+		id,
+		categoryId,
+		name,
+	}: {
+		id: string;
+		categoryId: string;
+		name: string;
+	}) => {
+		const savedAction = await updateAction({ id, name });
+		setCategories((prev) =>
+			prev.map((cat) =>
+				cat.id === categoryId
+					? {
+							...cat,
+							actions: cat.actions.map((action) =>
+								action.id === savedAction.id ? savedAction : action,
+							),
+						}
+					: cat,
+			),
+		);
 	};
-	const removeAction = async (id: string) => {
-		return false;
+	const removeAction = async ({ id, categoryId }: { id: string; categoryId: string }) => {
+		await deleteAction(id);
+		setCategories((prev) =>
+			prev.map((cat) =>
+				cat.id === categoryId
+					? { ...cat, actions: cat.actions.filter((action) => action.id !== id) }
+					: cat,
+			),
+		);
 	};
 
 	if (isLoading) return <p>로딩중</p>;
@@ -165,8 +182,10 @@ const SettingCategory = () => {
 	return (
 		<div>
 			<div className="flex justify-end gap-2 mb-4">
-				<button>+ 카테고리</button>
-				<button>순서 변경</button>
+				<button type="button" onClick={addCategory}>
+					+ 카테고리
+				</button>
+				<button type="button">순서 변경</button>
 			</div>
 			<ul>
 				{categories.map((cat) => (
