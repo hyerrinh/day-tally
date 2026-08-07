@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import { Paprika } from "next/font/google";
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
 	const body = await request.json();
 	const { id } = await params;
 
@@ -35,6 +36,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 	});
 
 	return Response.json(category);
-}
+};
 
-export async function Delete() {}
+export const Delete = async (
+	_request: Request,
+	{ params }: { params: Promise<{ id: string }> },
+) => {
+	const { id } = await params;
+	const deletedCategory = await prisma.category.delete({
+		where: { id },
+	});
+
+	return Response.json(deletedCategory);
+};

@@ -4,14 +4,24 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 	const { name } = await request.json();
 	const { id } = await params;
 
-	const updatedCategory = await prisma.action.update({
+	const updatedAction = await prisma.action.update({
 		where: { id },
 		data: {
 			name,
 		},
 	});
 
-	return Response.json(updatedCategory);
+	return Response.json(updatedAction);
 };
 
-export const DELETE = () => {};
+export const DELETE = async (
+	_request: Request,
+	{ params }: { params: Promise<{ id: string }> },
+) => {
+	const { id } = await params;
+	const deletedAction = await prisma.action.delete({
+		where: { id },
+	});
+
+	return Response.json(deletedAction);
+};

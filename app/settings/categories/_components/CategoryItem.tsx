@@ -32,21 +32,22 @@ const CategoryItem = ({
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [isSaving, setIsSaving] = useState<boolean>(false);
 	const [isDeleting, setIsDeleting] = useState(false);
-	const [editValue, setEditValue] = useState("");
-	const [newActionName, setNewActionName] = useState<string>("");
+	const [categoryValue, setCategoryValue] = useState("");
+	const [actionValue, setActionValue] = useState<string>("");
 	const [isAddingAction, setIsAddingAction] = useState<boolean>(false);
 
-	const handleSaveCategory = async ({ id, name }: { id: string; name: string }) => {
-		const trimmedName = name.trim();
+	const handleSaveCategory = async () => {
+		const trimmedName = categoryValue.trim();
 		if (trimmedName === "") return;
-		if (trimmedName === name) {
+		if (trimmedName === cat.name) {
 			alert("category : 이전과 동일한 이름");
 			return;
 		}
 
 		try {
 			setIsSaving(true);
-			await onSaveCategory({ id, name });
+			await onSaveCategory({ id: cat.id, name: categoryValue });
+			setIsEditing(false);
 		} catch (e) {
 			if (e instanceof Error) {
 				alert(e.message);
@@ -56,10 +57,10 @@ const CategoryItem = ({
 		}
 	};
 
-	const handleDeleteCategory = async (id: string) => {
+	const handleDeleteCategory = async () => {
 		try {
 			setIsDeleting(true);
-			await onDeleteCategory(id);
+			await onDeleteCategory(cat.id);
 		} catch (e) {
 			if (e instanceof Error) {
 				alert(e.message);
@@ -69,8 +70,8 @@ const CategoryItem = ({
 		}
 	};
 
-	const handleAddAction = async ({ categoryId, name }: { categoryId: string; name: string }) => {
-		const trimmedName = name.trim();
+	const handleAddAction = async () => {
+		const trimmedName = actionValue.trim();
 		if (trimmedName === "") {
 			alert("new action : 빈 값");
 			return;
@@ -78,7 +79,7 @@ const CategoryItem = ({
 
 		try {
 			setIsAddingAction(true);
-			await onAddAction({ categoryId, name });
+			await onAddAction({ categoryId: cat.id, name: actionValue });
 		} catch (e) {
 			if (e instanceof Error) {
 				alert(e.message);
@@ -95,21 +96,19 @@ const CategoryItem = ({
 					<input
 						type="text"
 						disabled={!isEditing}
-						value={!isEditing ? cat.name : editValue}
-						onChange={(e) => setEditValue(e.target.value)}
+						value={!isEditing ? cat.name : categoryValue}
+						onChange={(e) => setCategoryValue(e.target.value)}
 					/>
 				) : (
 					<button type="button">{cat.name}</button>
 				)}
 				<button
 					type="button"
-					onClick={() =>
-						!isEditing ? setIsEditing(false) : handleSaveCategory({ id: cat.id, name: cat.name })
-					}
+					onClick={() => (!isEditing ? setIsEditing(true) : handleSaveCategory())}
 				>
 					{isSaving ? "저장중" : isEditing ? "저장" : "수정"}
 				</button>
-				<button type="button" onClick={() => handleDeleteCategory(cat.id)}>
+				<button type="button" onClick={handleDeleteCategory}>
 					삭제
 				</button>
 			</div>
@@ -136,13 +135,10 @@ const CategoryItem = ({
 						<div>
 							<input
 								type="text"
-								value={newActionName}
-								onChange={(e) => setNewActionName(e.target.value)}
+								value={actionValue}
+								onChange={(e) => setActionValue(e.target.value)}
 							/>
-							<button
-								type="button"
-								onClick={() => handleAddAction({ categoryId: cat.id, name: newActionName })}
-							>
+							<button type="button" onClick={handleAddAction}>
 								추가
 							</button>
 							<button type="button" onClick={() => setIsAddingAction(false)}>

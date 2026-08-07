@@ -23,18 +23,11 @@ const ActionItem = ({ categoryId, action, onSaveAction, onDeleteAction }: Action
 	const [isDeleting, setIsDeleting] = useState(false);
 	const [editActionValue, setEditActionValue] = useState("");
 
-	const handleSaveAction = async ({
-		id,
-		categoryId,
-		name,
-	}: {
-		id: string;
-		categoryId: string;
-		name: string;
-	}) => {
+	const handleSaveAction = async () => {
 		try {
 			setIsSaving(true);
-			await onSaveAction({ id, categoryId, name });
+			await onSaveAction({ id: action.id, categoryId, name: editActionValue });
+			setIsEditing(false);
 		} catch (e) {
 			if (e instanceof Error) {
 				alert(e.message);
@@ -44,10 +37,10 @@ const ActionItem = ({ categoryId, action, onSaveAction, onDeleteAction }: Action
 		}
 	};
 
-	const handleDeleteAction = async ({ id, categoryId }: { id: string; categoryId: string }) => {
+	const handleDeleteAction = async () => {
 		try {
 			setIsDeleting(true);
-			await onDeleteAction({ id, categoryId });
+			await onDeleteAction({ id: action.id, categoryId });
 		} catch (e) {
 			if (e instanceof Error) {
 				alert(e.message);
@@ -72,15 +65,11 @@ const ActionItem = ({ categoryId, action, onSaveAction, onDeleteAction }: Action
 				)}
 				<button
 					type="button"
-					onClick={() =>
-						!isEditing
-							? setIsEditing(true)
-							: handleSaveAction({ id: action.id, categoryId, name: action.name })
-					}
+					onClick={() => (!isEditing ? setIsEditing(true) : handleSaveAction())}
 				>
 					{isSaving ? "저장중" : isEditing ? "저장" : "수정"}
 				</button>
-				<button type="button" onClick={() => handleDeleteAction({ id: action.id, categoryId })}>
+				<button type="button" onClick={handleDeleteAction}>
 					삭제
 				</button>
 			</div>

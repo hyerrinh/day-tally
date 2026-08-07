@@ -125,8 +125,12 @@ const SettingCategory = () => {
 	const addCategory = async () => {};
 	const saveCategory = async ({ id, name }: { id: string; name: string }) => {
 		const updatedCategory = await updateCategory({ id, name });
+		console.log(updatedCategory);
+
 		setCategories((prev) => {
-			return prev.map((cat) => (cat.id === updatedCategory.id ? updatedCategory : cat));
+			return prev.map((cat) =>
+				cat.id === updatedCategory.id ? { ...cat, ...updatedCategory } : cat,
+			);
 		});
 	};
 	const removeCategory = async (id: string) => {
