@@ -21,6 +21,22 @@ async function getCategories() {
 	return data;
 }
 
+async function postCategory({ name }: { name: string }) {
+	const res = await fetch("/api/categories", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({ name }),
+	});
+
+	const data = await res.json();
+
+	if (!res.ok) {
+		throw new Error(data.message ?? "post category 실패");
+	}
+
+	return data;
+}
+
 async function updateCategory({ id, name }: { id: string; name: string }) {
 	const res = await fetch(`/api/categories/${id}`, {
 		method: "PATCH",
@@ -75,12 +91,12 @@ async function updateAction({ id, name }: { id: string; name: string }) {
 	const res = await fetch(`/api/actions/${id}`, {
 		method: "PATCH",
 		headers: {
-			"Content-Type": "application/jsion",
+			"Content-Type": "application/json",
 		},
 		body: JSON.stringify({ name }),
 	});
 
-	const data = res.json();
+	const data = await res.json();
 
 	if (!res.ok) throw new Error("update action 실패");
 
@@ -89,7 +105,7 @@ async function updateAction({ id, name }: { id: string; name: string }) {
 
 async function deleteAction(id: string) {
 	const res = await fetch(`/api/actions/${id}`, {
-		method: "DElETE",
+		method: "DELETE",
 	});
 
 	const data = await res.json();
@@ -103,6 +119,9 @@ async function deleteAction(id: string) {
 
 const SettingCategory = () => {
 	const [isLoading, setIsLoading] = useState<boolean>(true);
+	const [isAddingCategory, setIsAddingCategory] = useState(false);
+	const [isAdding, setIsAdding] = useState(false);
+	const [categoryValue, setCategoryValue] = useState("");
 	const [categories, setCategories] = useState<CategoryWithActions[]>([]);
 
 	useEffect(() => {
@@ -122,10 +141,23 @@ const SettingCategory = () => {
 		loadCategories();
 	}, []);
 
-	const addCategory = async () => {};
+	const addCategory = async () => {
+		try {
+			setIsAdding(true);
+			const newCategory = await postCategory({ name: categoryValue });
+			setCategories((prev) => [...prev, newCategory]);
+			setIsAddingCategory(false);
+			setCategoryValue("");
+		} catch (e) {
+			if (e instanceof Error) {
+				alert(e.message);
+			}
+		} finally {
+			setIsAdding(false);
+		}
+	};
 	const saveCategory = async ({ id, name }: { id: string; name: string }) => {
 		const updatedCategory = await updateCategory({ id, name });
-		console.log(updatedCategory);
 
 		setCategories((prev) => {
 			return prev.map((cat) =>
@@ -186,7 +218,7 @@ const SettingCategory = () => {
 	return (
 		<div>
 			<div className="flex justify-end gap-2 mb-4">
-				<button type="button" onClick={addCategory}>
+				<button type="button" onClick={() => setIsAddingCategory(true)}>
 					+ 카테고리
 				</button>
 				<button type="button">순서 변경</button>
@@ -203,6 +235,28 @@ const SettingCategory = () => {
 						onDeleteAction={removeAction}
 					/>
 				))}
+				{isAddingCategory && (
+					<li>
+						<input
+							type="text"
+							id=""
+							value={categoryValue}
+							onChange={(e) => setCategoryValue(e.target.value)}
+						/>
+						<button type="button" onClick={addCategory} disabled={isAdding}>
+							{!isAdding ? "추가" : "추가중"}
+						</button>
+						<button
+							type="button"
+							onClick={() => {
+								setIsAddingCategory(false);
+								setCategoryValue("");
+							}}
+						>
+							취소
+						</button>
+					</li>
+				)}
 			</ul>
 		</div>
 	);

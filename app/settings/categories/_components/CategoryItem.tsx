@@ -32,6 +32,7 @@ const CategoryItem = ({
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [isSaving, setIsSaving] = useState<boolean>(false);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [isAdding, setIsAdding] = useState(false);
 	const [categoryValue, setCategoryValue] = useState("");
 	const [actionValue, setActionValue] = useState<string>("");
 	const [isAddingAction, setIsAddingAction] = useState<boolean>(false);
@@ -46,7 +47,7 @@ const CategoryItem = ({
 
 		try {
 			setIsSaving(true);
-			await onSaveCategory({ id: cat.id, name: categoryValue });
+			await onSaveCategory({ id: cat.id, name: trimmedName });
 			setIsEditing(false);
 		} catch (e) {
 			if (e instanceof Error) {
@@ -78,14 +79,16 @@ const CategoryItem = ({
 		}
 
 		try {
-			setIsAddingAction(true);
-			await onAddAction({ categoryId: cat.id, name: actionValue });
+			setIsAdding(true);
+			await onAddAction({ categoryId: cat.id, name: trimmedName });
+			setIsAddingAction(false);
+			setActionValue("");
 		} catch (e) {
 			if (e instanceof Error) {
 				alert(e.message);
 			}
 		} finally {
-			setIsAddingAction(false);
+			setIsAdding(false);
 		}
 	};
 
@@ -95,8 +98,7 @@ const CategoryItem = ({
 				{isEditing ? (
 					<input
 						type="text"
-						disabled={!isEditing}
-						value={!isEditing ? cat.name : categoryValue}
+						value={categoryValue}
 						onChange={(e) => setCategoryValue(e.target.value)}
 					/>
 				) : (
@@ -104,13 +106,25 @@ const CategoryItem = ({
 				)}
 				<button
 					type="button"
-					onClick={() => (!isEditing ? setIsEditing(true) : handleSaveCategory())}
+					onClick={() => {
+						if (!isEditing) {
+							setCategoryValue(cat.name);
+							setIsEditing(true);
+						} else handleSaveCategory();
+					}}
 				>
 					{isSaving ? "저장중" : isEditing ? "저장" : "수정"}
 				</button>
-				<button type="button" onClick={handleDeleteCategory}>
-					삭제
-				</button>
+				{isEditing && (
+					<button type="button" onClick={() => setIsEditing(false)}>
+						취소
+					</button>
+				)}
+				{!isEditing && (
+					<button type="button" onClick={handleDeleteCategory} disabled={isDeleting}>
+						{!isDeleting ? "삭제" : "삭제중"}
+					</button>
+				)}
 			</div>
 			<ul>
 				{cat.actions?.map((action: Action) => (
@@ -138,10 +152,16 @@ const CategoryItem = ({
 								value={actionValue}
 								onChange={(e) => setActionValue(e.target.value)}
 							/>
-							<button type="button" onClick={handleAddAction}>
-								추가
+							<button type="button" onClick={handleAddAction} disabled={isAdding}>
+								{!isAdding ? "추가" : "추가중"}
 							</button>
-							<button type="button" onClick={() => setIsAddingAction(false)}>
+							<button
+								type="button"
+								onClick={() => {
+									setIsAddingAction(false);
+									setActionValue("");
+								}}
+							>
 								취소
 							</button>
 						</div>

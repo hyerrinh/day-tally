@@ -56,8 +56,7 @@ const ActionItem = ({ categoryId, action, onSaveAction, onDeleteAction }: Action
 				{isEditing ? (
 					<input
 						type="text"
-						disabled={!isEditing}
-						value={!isEditing ? action.name : editActionValue}
+						value={editActionValue}
 						onChange={(e) => setEditActionValue(e.target.value)}
 					/>
 				) : (
@@ -65,13 +64,25 @@ const ActionItem = ({ categoryId, action, onSaveAction, onDeleteAction }: Action
 				)}
 				<button
 					type="button"
-					onClick={() => (!isEditing ? setIsEditing(true) : handleSaveAction())}
+					onClick={() => {
+						if (!isEditing) {
+							setEditActionValue(action.name);
+							setIsEditing(true);
+						} else handleSaveAction();
+					}}
 				>
 					{isSaving ? "저장중" : isEditing ? "저장" : "수정"}
 				</button>
-				<button type="button" onClick={handleDeleteAction}>
-					삭제
-				</button>
+				{isEditing && (
+					<button type="button" onClick={() => setIsEditing(false)}>
+						취소
+					</button>
+				)}
+				{!isEditing && (
+					<button type="button" onClick={handleDeleteAction} disabled={isDeleting}>
+						{!isDeleting ? "삭제" : "삭제중"}
+					</button>
+				)}
 			</div>
 		</li>
 	);
