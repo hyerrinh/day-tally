@@ -141,20 +141,16 @@ const SettingCategory = () => {
 		loadCategories();
 	}, []);
 
-	const addCategory = async () => {
-		try {
-			setIsAdding(true);
-			const newCategory = await postCategory({ name: categoryValue });
-			setCategories((prev) => [...prev, newCategory]);
-			setIsAddingCategory(false);
-			setCategoryValue("");
-		} catch (e) {
-			if (e instanceof Error) {
-				alert(e.message);
-			}
-		} finally {
-			setIsAdding(false);
-		}
+	const isDuplicateCategoryName = ({ excludeId, name }: { excludeId?: string; name: string }) => {
+		const isDuplicate = categories.some((cat) => {
+			return cat.id !== excludeId && cat.normalizedName === name.toLowerCase();
+		});
+
+		return isDuplicate;
+	};
+	const addCategory = async ({ name }: { name: string }) => {
+		const newCategory = await postCategory({ name });
+		setCategories((prev) => [...prev, newCategory]);
 	};
 	const saveCategory = async ({ id, name }: { id: string; name: string }) => {
 		const updatedCategory = await updateCategory({ id, name });
@@ -212,6 +208,32 @@ const SettingCategory = () => {
 			),
 		);
 	};
+	const handleAddCategory = async () => {
+		const name = categoryValue.trim();
+		if (name === "") {
+			alert("category 빈 값");
+			return;
+		}
+
+		const isDuplicate = isDuplicateCategoryName({ name });
+		if (isDuplicate) {
+			alert("front: category 이름 중복");
+			return;
+		}
+
+		try {
+			setIsAdding(true);
+			await addCategory({ name });
+			setIsAddingCategory(false);
+			setCategoryValue("");
+		} catch (e) {
+			if (e instanceof Error) {
+				alert(e.message);
+			}
+		} finally {
+			setIsAdding(false);
+		}
+	};
 
 	if (isLoading) return <p>로딩중</p>;
 
@@ -233,6 +255,7 @@ const SettingCategory = () => {
 						onAddAction={addAction}
 						onSaveAction={saveAction}
 						onDeleteAction={removeAction}
+						isDuplicateCategoryName={isDuplicateCategoryName}
 					/>
 				))}
 				{isAddingCategory && (
@@ -243,7 +266,7 @@ const SettingCategory = () => {
 							value={categoryValue}
 							onChange={(e) => setCategoryValue(e.target.value)}
 						/>
-						<button type="button" onClick={addCategory} disabled={isAdding}>
+						<button type="button" onClick={handleAddCategory} disabled={isAdding}>
 							{!isAdding ? "추가" : "추가중"}
 						</button>
 						<button

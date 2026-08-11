@@ -19,6 +19,7 @@ type CategoryItemProps = {
 		name: string;
 	}) => Promise<void>;
 	onDeleteAction: ({ id, categoryId }: { id: string; categoryId: string }) => Promise<void>;
+	isDuplicateCategoryName: ({ excludeId, name }: { excludeId?: string; name: string }) => boolean;
 };
 
 const CategoryItem = ({
@@ -28,6 +29,7 @@ const CategoryItem = ({
 	onAddAction,
 	onSaveAction,
 	onDeleteAction,
+	isDuplicateCategoryName: isDuplicateCategoryName,
 }: CategoryItemProps) => {
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -38,16 +40,22 @@ const CategoryItem = ({
 	const [isAddingAction, setIsAddingAction] = useState<boolean>(false);
 
 	const handleSaveCategory = async () => {
-		const trimmedName = categoryValue.trim();
-		if (trimmedName === "") return;
-		if (trimmedName === cat.name) {
+		const name = categoryValue.trim();
+		if (name === "") return;
+		if (name === cat.name) {
 			alert("category : 이전과 동일한 이름");
+			return;
+		}
+
+		const isDuplicate = isDuplicateCategoryName({ excludeId: cat.id, name });
+		if (isDuplicate) {
+			alert("front: category 이미 있는 이름");
 			return;
 		}
 
 		try {
 			setIsSaving(true);
-			await onSaveCategory({ id: cat.id, name: trimmedName });
+			await onSaveCategory({ id: cat.id, name });
 			setIsEditing(false);
 		} catch (e) {
 			if (e instanceof Error) {
