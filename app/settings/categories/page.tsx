@@ -3,119 +3,21 @@
 import { useEffect, useState } from "react";
 import CategoryItem from "./_components/CategoryItem";
 import { Prisma } from "@/app/generated/prisma/client";
+import {
+	deleteAction,
+	deleteCategory,
+	getCategories,
+	createAction,
+	createCategory,
+	updateAction,
+	updateCategory,
+} from "./_api/categoryApi";
 
 export type CategoryWithActions = Prisma.CategoryGetPayload<{
 	include: {
 		actions: true;
 	};
 }>;
-
-async function getCategories() {
-	const res = await fetch("/api/categories");
-	const data = await res.json();
-
-	if (!res.ok) {
-		throw new Error(data.message ?? "카테고리 로드 실패");
-	}
-
-	return data;
-}
-
-async function postCategory({ name }: { name: string }) {
-	const res = await fetch("/api/categories", {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ name }),
-	});
-
-	const data = await res.json();
-
-	if (!res.ok) {
-		throw new Error(data.message ?? "post category 실패");
-	}
-
-	return data;
-}
-
-async function updateCategory({ id, name }: { id: string; name: string }) {
-	const res = await fetch(`/api/categories/${id}`, {
-		method: "PATCH",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({ name }),
-	});
-
-	const data = await res.json();
-
-	if (!res.ok) {
-		throw new Error(data.message ?? "카테고리 수정 실패");
-	}
-
-	return data;
-}
-
-async function deleteCategory(id: string) {
-	const res = await fetch(`/api/categories/${id}`, {
-		method: "DELETE",
-	});
-
-	const data = await res.json();
-
-	if (!res.ok) {
-		throw new Error(data.message ?? "delete category 실패");
-	}
-
-	return data;
-}
-
-async function postAction({ categoryId, name }: { categoryId: string; name: string }) {
-	const res = await fetch(`/api/categories/${categoryId}/actions`, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({ name }),
-	});
-
-	const data = await res.json();
-
-	if (!res.ok) {
-		throw new Error(data.message ?? "액션 추가 실패");
-	}
-
-	return data;
-}
-
-async function updateAction({ id, name }: { id: string; name: string }) {
-	const res = await fetch(`/api/actions/${id}`, {
-		method: "PATCH",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		body: JSON.stringify({ name }),
-	});
-
-	const data = await res.json();
-
-	if (!res.ok) throw new Error("update action 실패");
-
-	return data;
-}
-
-async function deleteAction(id: string) {
-	const res = await fetch(`/api/actions/${id}`, {
-		method: "DELETE",
-	});
-
-	const data = await res.json();
-
-	if (!res.ok) {
-		throw new Error(data.message ?? "action 삭제 실패");
-	}
-
-	return data;
-}
 
 const SettingCategory = () => {
 	const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -171,7 +73,7 @@ const SettingCategory = () => {
 	};
 
 	const addCategory = async ({ name }: { name: string }) => {
-		const newCategory = await postCategory({ name });
+		const newCategory = await createCategory({ name });
 		setCategories((prev) => [...prev, newCategory]);
 	};
 	const saveCategory = async ({ id, name }: { id: string; name: string }) => {
@@ -188,7 +90,7 @@ const SettingCategory = () => {
 		setCategories((prev) => prev.filter((cat) => cat.id !== id));
 	};
 	const addAction = async ({ categoryId, name }: { categoryId: string; name: string }) => {
-		const newAction = await postAction({ categoryId, name });
+		const newAction = await createAction({ categoryId, name });
 		setCategories((prev) =>
 			prev.map((category) =>
 				category.id === newAction.categoryId
