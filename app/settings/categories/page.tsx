@@ -148,6 +148,28 @@ const SettingCategory = () => {
 
 		return isDuplicate;
 	};
+
+	const isDuplicateActionName = ({
+		name,
+		categoryId,
+		excludedId,
+	}: {
+		name: string;
+		categoryId: string;
+		excludedId?: string;
+	}) => {
+		const isDuplicate = categories.some(
+			(cat) =>
+				cat.id === categoryId &&
+				cat.actions.some(
+					(action) =>
+						action.id !== excludedId && action.normalizedName === name.toLocaleLowerCase(),
+				),
+		);
+
+		return isDuplicate;
+	};
+
 	const addCategory = async ({ name }: { name: string }) => {
 		const newCategory = await postCategory({ name });
 		setCategories((prev) => [...prev, newCategory]);
@@ -256,6 +278,7 @@ const SettingCategory = () => {
 						onSaveAction={saveAction}
 						onDeleteAction={removeAction}
 						isDuplicateCategoryName={isDuplicateCategoryName}
+						isDuplicateActionName={isDuplicateActionName}
 					/>
 				))}
 				{isAddingCategory && (

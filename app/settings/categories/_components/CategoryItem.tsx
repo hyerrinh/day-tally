@@ -20,6 +20,14 @@ type CategoryItemProps = {
 	}) => Promise<void>;
 	onDeleteAction: ({ id, categoryId }: { id: string; categoryId: string }) => Promise<void>;
 	isDuplicateCategoryName: ({ excludeId, name }: { excludeId?: string; name: string }) => boolean;
+	isDuplicateActionName: ({
+		categoryId,
+		name,
+	}: {
+		categoryId: string;
+		name: string;
+		excludedId?: string;
+	}) => boolean;
 };
 
 const CategoryItem = ({
@@ -29,7 +37,8 @@ const CategoryItem = ({
 	onAddAction,
 	onSaveAction,
 	onDeleteAction,
-	isDuplicateCategoryName: isDuplicateCategoryName,
+	isDuplicateCategoryName,
+	isDuplicateActionName,
 }: CategoryItemProps) => {
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -41,13 +50,17 @@ const CategoryItem = ({
 
 	const handleSaveCategory = async () => {
 		const name = categoryValue.trim();
-		if (name === "") return;
+		if (name === "") {
+			alert("front : category 빈 값");
+			return;
+		}
 		if (name === cat.name) {
-			alert("category : 이전과 동일한 이름");
+			alert("front : category 이전과 동일한 이름");
 			return;
 		}
 
 		const isDuplicate = isDuplicateCategoryName({ excludeId: cat.id, name });
+
 		if (isDuplicate) {
 			alert("front: category 이미 있는 이름");
 			return;
@@ -80,15 +93,21 @@ const CategoryItem = ({
 	};
 
 	const handleAddAction = async () => {
-		const trimmedName = actionValue.trim();
-		if (trimmedName === "") {
+		const name = actionValue.trim();
+		if (name === "") {
 			alert("new action : 빈 값");
+			return;
+		}
+
+		const isDuplicate = isDuplicateActionName({ name, categoryId: cat.id });
+		if (isDuplicate) {
+			alert("front : 이미 존재하는 action name");
 			return;
 		}
 
 		try {
 			setIsAdding(true);
-			await onAddAction({ categoryId: cat.id, name: trimmedName });
+			await onAddAction({ categoryId: cat.id, name });
 			setIsAddingAction(false);
 			setActionValue("");
 		} catch (e) {
@@ -114,6 +133,7 @@ const CategoryItem = ({
 				)}
 				<button
 					type="button"
+					disabled={isSaving}
 					onClick={() => {
 						if (!isEditing) {
 							setCategoryValue(cat.name);
@@ -142,6 +162,7 @@ const CategoryItem = ({
 						action={action}
 						onSaveAction={onSaveAction}
 						onDeleteAction={onDeleteAction}
+						isDuplicateActionName={isDuplicateActionName}
 					/>
 				))}
 				<li>
