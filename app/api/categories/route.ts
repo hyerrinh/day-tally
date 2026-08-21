@@ -3,8 +3,18 @@ import { prisma } from "@/lib/prisma";
 const userId = "550e8400-e29b-41d4-a716-446655440000";
 
 export const GET = async () => {
-	const categories = await prisma.category.findMany({ include: { actions: true } });
-	return Response.json(categories);
+	try {
+		const categories = await prisma.category.findMany({
+			where: { userId, isHidden: false },
+			include: { actions: { where: { isHidden: false } } },
+		});
+		return Response.json(categories);
+	} catch (e) {
+		if (e instanceof Error) {
+			return Response.json({ message: e.message }, { status: 500 });
+		}
+		return Response.json({ message: "back : 카테고리 조회 - 서버 오류" }, { status: 500 });
+	}
 };
 
 export const POST = async (request: Request) => {
