@@ -25,33 +25,27 @@ export async function createCategory({ name }: { name: string }) {
 	return data;
 }
 
-export async function updateCategory({ id, name }: { id: string; name: string }) {
+export async function updateCategory({
+	id,
+	name,
+	isHidden,
+}: {
+	id: string;
+	name?: string;
+	isHidden?: boolean;
+}) {
 	const res = await fetch(`/api/categories/${id}`, {
 		method: "PATCH",
 		headers: {
 			"Content-Type": "application/json",
 		},
-		body: JSON.stringify({ name }),
+		body: JSON.stringify({ name, isHidden }),
 	});
 
 	const data = await res.json();
 
 	if (!res.ok) {
 		throw new Error(data.message ?? "카테고리 수정 실패");
-	}
-
-	return data;
-}
-
-export async function deleteCategory(id: string) {
-	const res = await fetch(`/api/categories/${id}`, {
-		method: "DELETE",
-	});
-
-	const data = await res.json();
-
-	if (!res.ok) {
-		throw new Error(data.message ?? "delete category 실패");
 	}
 
 	return data;
@@ -75,32 +69,26 @@ export async function createAction({ categoryId, name }: { categoryId: string; n
 	return data;
 }
 
-export async function updateAction({ id, name }: { id: string; name: string }) {
+export async function updateAction({
+	id,
+	name,
+	isHidden,
+}: {
+	id: string;
+	name?: string;
+	isHidden?: boolean;
+}) {
 	const res = await fetch(`/api/actions/${id}`, {
 		method: "PATCH",
 		headers: {
 			"Content-Type": "application/json",
 		},
-		body: JSON.stringify({ name }),
+		body: JSON.stringify({ name, isHidden }),
 	});
 
 	const data = await res.json();
 
 	if (!res.ok) throw new Error("update action 실패");
-
-	return data;
-}
-
-export async function deleteAction(id: string) {
-	const res = await fetch(`/api/actions/${id}`, {
-		method: "DELETE",
-	});
-
-	const data = await res.json();
-
-	if (!res.ok) {
-		throw new Error(data.message ?? "action 삭제 실패");
-	}
 
 	return data;
 }

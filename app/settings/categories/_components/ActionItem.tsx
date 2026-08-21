@@ -14,7 +14,7 @@ type ActionItemProps = {
 		categoryId: string;
 		name: string;
 	}) => Promise<void>;
-	onDeleteAction: ({ id, categoryId }: { id: string; categoryId: string }) => Promise<void>;
+	onHideAction: ({ id, categoryId }: { id: string; categoryId: string }) => Promise<void>;
 	isDuplicateActionName: ({
 		categoryId,
 		name,
@@ -30,12 +30,12 @@ const ActionItem = ({
 	categoryId,
 	action,
 	onSaveAction,
-	onDeleteAction,
+	onHideAction,
 	isDuplicateActionName,
 }: ActionItemProps) => {
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [isSaving, setIsSaving] = useState<boolean>(false);
-	const [isDeleting, setIsDeleting] = useState(false);
+	const [isHiding, setIsHiding] = useState(false);
 	const [editActionValue, setEditActionValue] = useState("");
 
 	const handleSaveAction = async () => {
@@ -71,16 +71,16 @@ const ActionItem = ({
 		}
 	};
 
-	const handleDeleteAction = async () => {
+	const handleHideAction = async () => {
 		try {
-			setIsDeleting(true);
-			await onDeleteAction({ id: action.id, categoryId });
+			setIsHiding(true);
+			await onHideAction({ id: action.id, categoryId });
 		} catch (e) {
 			if (e instanceof Error) {
 				alert(e.message);
 			}
 		} finally {
-			setIsDeleting(false);
+			setIsHiding(false);
 		}
 	};
 
@@ -114,8 +114,8 @@ const ActionItem = ({
 					</button>
 				)}
 				{!isEditing && (
-					<button type="button" onClick={handleDeleteAction} disabled={isDeleting}>
-						{!isDeleting ? "삭제" : "삭제중"}
+					<button type="button" onClick={handleHideAction} disabled={isHiding}>
+						{!isHiding ? "숨김" : "숨김중"}
 					</button>
 				)}
 			</div>

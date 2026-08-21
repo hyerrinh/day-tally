@@ -7,7 +7,7 @@ import ActionItem from "./ActionItem";
 type CategoryItemProps = {
 	cat: CategoryWithActions;
 	onSaveCategory: ({ id, name }: { id: string; name: string }) => Promise<void>;
-	onDeleteCategory: (id: string) => Promise<void>;
+	onHideCategory: (id: string) => Promise<void>;
 	onAddAction: ({ categoryId, name }: { categoryId: string; name: string }) => Promise<void>;
 	onSaveAction: ({
 		id,
@@ -18,7 +18,7 @@ type CategoryItemProps = {
 		categoryId: string;
 		name: string;
 	}) => Promise<void>;
-	onDeleteAction: ({ id, categoryId }: { id: string; categoryId: string }) => Promise<void>;
+	onHideAction: ({ id, categoryId }: { id: string; categoryId: string }) => Promise<void>;
 	isDuplicateCategoryName: ({ excludeId, name }: { excludeId?: string; name: string }) => boolean;
 	isDuplicateActionName: ({
 		categoryId,
@@ -33,16 +33,16 @@ type CategoryItemProps = {
 const CategoryItem = ({
 	cat,
 	onSaveCategory,
-	onDeleteCategory,
+	onHideCategory,
 	onAddAction,
 	onSaveAction,
-	onDeleteAction,
+	onHideAction,
 	isDuplicateCategoryName,
 	isDuplicateActionName,
 }: CategoryItemProps) => {
 	const [isEditing, setIsEditing] = useState<boolean>(false);
 	const [isSaving, setIsSaving] = useState<boolean>(false);
-	const [isDeleting, setIsDeleting] = useState(false);
+	const [isHiding, setIsHiding] = useState(false);
 	const [isAdding, setIsAdding] = useState(false);
 	const [categoryValue, setCategoryValue] = useState("");
 	const [actionValue, setActionValue] = useState<string>("");
@@ -79,16 +79,16 @@ const CategoryItem = ({
 		}
 	};
 
-	const handleDeleteCategory = async () => {
+	const handleHideCategory = async () => {
 		try {
-			setIsDeleting(true);
-			await onDeleteCategory(cat.id);
+			setIsHiding(true);
+			await onHideCategory(cat.id);
 		} catch (e) {
 			if (e instanceof Error) {
 				alert(e.message);
 			}
 		} finally {
-			setIsDeleting(false);
+			setIsHiding(false);
 		}
 	};
 
@@ -149,8 +149,8 @@ const CategoryItem = ({
 					</button>
 				)}
 				{!isEditing && (
-					<button type="button" onClick={handleDeleteCategory} disabled={isDeleting}>
-						{!isDeleting ? "삭제" : "삭제중"}
+					<button type="button" onClick={handleHideCategory} disabled={isHiding}>
+						{!isHiding ? "숨김" : "숨김중"}
 					</button>
 				)}
 			</div>
@@ -161,7 +161,7 @@ const CategoryItem = ({
 						key={action.id}
 						action={action}
 						onSaveAction={onSaveAction}
-						onDeleteAction={onDeleteAction}
+						onHideAction={onHideAction}
 						isDuplicateActionName={isDuplicateActionName}
 					/>
 				))}

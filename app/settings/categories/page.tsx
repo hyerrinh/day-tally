@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import CategoryItem from "./_components/CategoryItem";
 import { Prisma } from "@/app/generated/prisma/client";
 import {
-	deleteAction,
-	deleteCategory,
 	getCategories,
 	createAction,
 	createCategory,
@@ -86,7 +84,7 @@ const SettingCategory = () => {
 		});
 	};
 	const removeCategory = async (id: string) => {
-		await deleteCategory(id);
+		await updateCategory({ id, isHidden: true });
 		setCategories((prev) => prev.filter((cat) => cat.id !== id));
 	};
 	const addAction = async ({ categoryId, name }: { categoryId: string; name: string }) => {
@@ -123,7 +121,7 @@ const SettingCategory = () => {
 		);
 	};
 	const removeAction = async ({ id, categoryId }: { id: string; categoryId: string }) => {
-		await deleteAction(id);
+		await updateAction({ id, isHidden: true });
 		setCategories((prev) =>
 			prev.map((cat) =>
 				cat.id === categoryId
@@ -175,10 +173,10 @@ const SettingCategory = () => {
 						key={cat.id}
 						cat={cat}
 						onSaveCategory={saveCategory}
-						onDeleteCategory={removeCategory}
+						onHideCategory={removeCategory}
 						onAddAction={addAction}
 						onSaveAction={saveAction}
-						onDeleteAction={removeAction}
+						onHideAction={removeAction}
 						isDuplicateCategoryName={isDuplicateCategoryName}
 						isDuplicateActionName={isDuplicateActionName}
 					/>
