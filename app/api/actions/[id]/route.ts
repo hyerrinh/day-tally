@@ -8,16 +8,16 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 		const { id } = await params;
 
 		if (typeof name !== "string") {
-			return Response.json({ message: "api : 액션 name 타입 오류" }, { status: 400 });
+			return Response.json({ message: "back : action 수정 - name 타입 오류" }, { status: 400 });
 		}
 
 		const trimmedName = name.trim();
-
 		if (trimmedName === "") {
-			return Response.json({ message: "api 액션 name 빈 값" }, { status: 400 });
+			return Response.json({ message: "back : action 수정 - name 빈 값" }, { status: 400 });
 		}
+
 		if (trimmedName.length > 15) {
-			return Response.json({ message: "api 액션 글자수 15 초과" }, { status: 400 });
+			return Response.json({ message: "back : action 수정 - name 15자 초과" }, { status: 400 });
 		}
 
 		const normalizedName = trimmedName.toLowerCase();
@@ -25,12 +25,13 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 		const existingAction = await prisma.action.findFirst({ where: { id, userId } });
 
 		if (!existingAction) {
-			return Response.json({ message: "api : 액션 없다" }, { status: 404 });
+			return Response.json({ message: "back : action 수정 - action 없음" }, { status: 404 });
 		}
+
 		const categoryId = existingAction.categoryId;
 
 		if (existingAction.normalizedName === normalizedName) {
-			return Response.json({ message: "api : 이전과 동일한 action name" }, { status: 400 });
+			return Response.json({ message: "back : action 수정 - 이전과 동일한 이름" }, { status: 400 });
 		}
 
 		const duplicateAction = await prisma.action.findFirst({
@@ -38,7 +39,7 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 		});
 
 		if (duplicateAction) {
-			return Response.json({ message: "api : 다른 action name 과 중복" }, { status: 409 });
+			return Response.json({ message: "back : action 수정 - 이름 중복" }, { status: 409 });
 		}
 
 		const updatedAction = await prisma.action.update({
@@ -52,9 +53,10 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 		return Response.json(updatedAction);
 	} catch (e) {
 		if (e instanceof Error) {
-			return Response.json({ message: e.message }, { status: 500 });
+			return Response.json({ message: `back : action 수정 - ${e.message}` }, { status: 500 });
 		}
-		return Response.json({ message: "api : 액션 수정 에러" }, { status: 500 });
+
+		return Response.json({ message: "back : action 수정 - 서버 오류" }, { status: 500 });
 	}
 };
 

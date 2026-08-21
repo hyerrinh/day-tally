@@ -9,16 +9,17 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 		const { id } = await params;
 
 		if (typeof name !== "string") {
-			return Response.json({ message: "api : 타입 string 아님" }, { status: 400 });
+			return Response.json({ message: "back : category 수정 - name 타입 오류" }, { status: 400 });
 		}
 
 		const trimmedName = name.trim();
 
 		if (trimmedName === "") {
-			return Response.json({ message: "api : 카테고리 빈 값" }, { status: 400 });
+			return Response.json({ message: "back : category 수정 - name 빈 값" }, { status: 400 });
 		}
+
 		if (trimmedName.length > 15) {
-			return Response.json({ message: "api : 글자수 15 초과" }, { status: 400 });
+			return Response.json({ message: "back : category 수정 - name 15자 초과" }, { status: 400 });
 		}
 
 		const normalizedName = trimmedName.toLowerCase();
@@ -31,10 +32,14 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 		});
 
 		if (!existingCategory) {
-			return Response.json({ message: "api : 카테고리 없음" }, { status: 404 });
+			return Response.json({ message: "back : category 수정 - category 없음" }, { status: 404 });
 		}
+
 		if (normalizedName === existingCategory.normalizedName) {
-			return Response.json({ message: "api 동일한 카테고리 이름" }, { status: 400 });
+			return Response.json(
+				{ message: "back : category 수정 - 이전과 동일한 이름" },
+				{ status: 400 },
+			);
 		}
 
 		const duplicateCategory = await prisma.category.findFirst({
@@ -46,7 +51,7 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 		});
 
 		if (duplicateCategory) {
-			return Response.json({ message: "api : 이미 존재하는 카테고리" }, { status: 409 });
+			return Response.json({ message: "back : category 수정 - 이름 중복" }, { status: 409 });
 		}
 
 		const category = await prisma.category.update({
@@ -62,9 +67,10 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 		return Response.json(category);
 	} catch (e) {
 		if (e instanceof Error) {
-			return Response.json({ message: e.message }, { status: 500 });
+			return Response.json({ message: `back : category 수정 - ${e.message}` }, { status: 500 });
 		}
-		return Response.json({ message: "서버 오류" }, { status: 500 });
+
+		return Response.json({ message: "back : category 수정 - 서버 오류" }, { status: 500 });
 	}
 };
 

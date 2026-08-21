@@ -13,17 +13,17 @@ export const POST = async (request: Request) => {
 		const { name, icon } = body;
 
 		if (typeof name !== "string") {
-			return Response.json({ message: "back : name은 문자열이어야 합니다." }, { status: 400 });
+			return Response.json({ message: "back : category 생성 - name 타입 오류" }, { status: 400 });
 		}
 
 		const trimmedName = name.trim();
 
 		if (trimmedName === "") {
-			return Response.json({ message: "back : name은 빈 값" }, { status: 400 });
+			return Response.json({ message: "back : category 생성 - name 빈 값" }, { status: 400 });
 		}
 
 		if (trimmedName.length > 15) {
-			return Response.json({ message: "name은 15자를 초과할 수 없습니다." }, { status: 400 });
+			return Response.json({ message: "back : category 생성 - name 15자 초과" }, { status: 400 });
 		}
 
 		const normalizedName = trimmedName.toLowerCase();
@@ -38,7 +38,7 @@ export const POST = async (request: Request) => {
 		});
 
 		if (duplicateCategory) {
-			return Response.json({ message: "이미 존재하는 카테고리 이름입니다." }, { status: 409 });
+			return Response.json({ message: "back : category 생성 - 이름 중복" }, { status: 409 });
 		}
 
 		const category = await prisma.category.create({
@@ -55,8 +55,9 @@ export const POST = async (request: Request) => {
 		return Response.json(category, { status: 201 });
 	} catch (e) {
 		if (e instanceof Error) {
-			return Response.json({ message: e.message }, { status: 500 });
+			return Response.json({ message: `back : category 생성 - ${e.message}` }, { status: 500 });
 		}
-		return Response.json({ message: "back: 서버 오류" }, { status: 500 });
+
+		return Response.json({ message: "back : category 생성 - 서버 오류" }, { status: 500 });
 	}
 };
