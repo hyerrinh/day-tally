@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import CategoryItem from "./_components/CategoryItem";
-import { Prisma } from "@/app/generated/prisma/client";
 import {
 	getCategories,
 	createAction,
@@ -10,12 +9,7 @@ import {
 	updateAction,
 	updateCategory,
 } from "./_api/categoryApi";
-
-export type CategoryWithActions = Prisma.CategoryGetPayload<{
-	include: {
-		actions: true;
-	};
-}>;
+import type { CategoryWithActions } from "@/app/_type/type";
 
 const SettingCategory = () => {
 	const [isLoading, setIsLoading] = useState<boolean>(true);

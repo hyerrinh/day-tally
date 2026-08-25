@@ -1,8 +1,8 @@
 "use client";
 import type { Action } from "@/app/generated/prisma/client";
 import { useState } from "react";
-import { CategoryWithActions } from "../page";
 import ActionItem from "./ActionItem";
+import type { CategoryWithActions } from "@/app/_type/type";
 
 type CategoryItemProps = {
 	cat: CategoryWithActions;
