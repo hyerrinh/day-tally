@@ -7,30 +7,47 @@ type WeekTabsProps = {
 
 const WeekTabs = ({ selectedDate, onChangeDate }: WeekTabsProps) => {
 	const weekDates = getWeekDates();
+	const today = new Date();
 
 	return (
-		<div>
-			<p>캘린더</p>
-			<ul className="flex gap-3">
+		<section className="border-b border-slate-100 pt-2 pb-3">
+			<p className="mb-2 text-sm font-semibold text-slate-800">{selectedDate.getMonth() + 1}월</p>
+			<ul className="grid grid-cols-7">
 				{weekDates.map((date) => {
-					const isToday = formatDate(new Date()) === formatDate(date);
+					const isToday = formatDate(today) === formatDate(date);
 					const isActive = formatDate(selectedDate) === formatDate(date);
 
 					return (
 						<li key={formatDate(date)}>
-							<button type="button" onClick={() => onChangeDate(date)}>
+							<button
+								type="button"
+								onClick={() => onChangeDate(date)}
+								className="flex w-full flex-col items-center gap-1"
+							>
 								<span
-									className={`${isToday ? "font-bold" : ""} block ${isActive ? "text-red-600" : ""}`}
+									className={`text-[11px] ${
+										isToday ? "font-semibold text-red-500" : "text-slate-400"
+									}`}
+								>
+									{formatDay(date.getDay())}
+								</span>
+								<span
+									className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium transition-colors ${
+										isActive
+											? "bg-slate-800 text-white"
+											: isToday
+												? "text-red-500"
+												: "text-slate-600 hover:bg-slate-100"
+									}`}
 								>
 									{date.getDate()}
 								</span>
-								<span>{formatDay(date.getDay())}</span>
 							</button>
 						</li>
 					);
 				})}
 			</ul>
-		</div>
+		</section>
 	);
 };
 

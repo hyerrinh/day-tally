@@ -50,7 +50,13 @@ export default function Home() {
 		loadRecords();
 	}, [selectedDate]);
 
-	if (isCategoriesLoading) return <div>카테고리 로딩중</div>;
+	if (isCategoriesLoading) {
+		return (
+			<main className="flex min-h-dvh items-center justify-center bg-slate-50">
+				<p className="text-sm text-slate-500">카테고리를 불러오는 중입니다.</p>
+			</main>
+		);
+	}
 
 	const categoriesWithRecords = categories
 		.map((category) => {
@@ -60,16 +66,24 @@ export default function Home() {
 		.filter((category) => category.actions.length);
 
 	return (
-		<div>
-			<WeekTabs selectedDate={selectedDate} onChangeDate={setSelectedDate} />
-			<CategoryTabs
-				categories={categories}
-				activeCategoryId={activeCategoryId}
-				onChangeCategoryId={setActiveCategoryId}
-			/>
-			{!isRecordsLoading && (
-				<DailyRecords categoriesWithRecords={categoriesWithRecords} records={records} />
-			)}
-		</div>
+		<main className="min-h-dvh bg-white px-4 py-4 text-slate-900">
+			<div className="mx-auto w-full max-w-md">
+				<WeekTabs selectedDate={selectedDate} onChangeDate={setSelectedDate} />
+
+				<CategoryTabs
+					categories={categories}
+					activeCategoryId={activeCategoryId}
+					onChangeCategoryId={setActiveCategoryId}
+				/>
+
+				{isRecordsLoading ? (
+					<div className="rounded-2xl bg-white p-5 text-center text-sm text-slate-500 shadow-sm">
+						기록을 불러오는 중입니다.
+					</div>
+				) : (
+					<DailyRecords categoriesWithRecords={categoriesWithRecords} records={records} />
+				)}
+			</div>
+		</main>
 	);
 }
