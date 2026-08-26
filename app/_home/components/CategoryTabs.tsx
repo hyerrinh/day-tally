@@ -4,9 +4,15 @@ type CategoryTabsProps = {
 	categories: CategoryWithActions[];
 	activeCategoryId: string | null;
 	onChangeCategoryId: (id: string) => void;
+	onAddRecord: (actionId: string) => void;
 };
 
-const CategoryTabs = ({ categories, activeCategoryId, onChangeCategoryId }: CategoryTabsProps) => {
+const CategoryTabs = ({
+	categories,
+	activeCategoryId,
+	onChangeCategoryId,
+	onAddRecord,
+}: CategoryTabsProps) => {
 	const actions = categories.find((category) => category.id === activeCategoryId)?.actions ?? [];
 
 	return (
@@ -38,6 +44,7 @@ const CategoryTabs = ({ categories, activeCategoryId, onChangeCategoryId }: Cate
 						<button
 							type="button"
 							className="rounded-full px-2.5 py-1.5 text-[11px] font-medium text-slate-600 transition-colors hover:border-red-300 hover:text-red-500 active:bg-red-50"
+							onClick={() => onAddRecord(action.id)}
 						>
 							+ {action.name}
 						</button>

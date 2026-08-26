@@ -4,6 +4,7 @@ import { formatDate } from "./_home/utils/date";
 import WeekTabs from "./_home/components/WeekTabs";
 import DailyRecords from "./_home/components/DailyRecords";
 import CategoryTabs from "./_home/components/CategoryTabs";
+import AddRecordSheet from "./_home/components/AddRecordSheet";
 import type { CategoryWithActions, Records } from "./_type/type";
 import { getRecords } from "./_home/api/homeApi";
 import { getCategories } from "./settings/categories/_api/categoryApi";
@@ -15,6 +16,7 @@ export default function Home() {
 	const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
 	const [records, setRecords] = useState<Records>({});
 	const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+	const [selectedAction, setSelectedAction] = useState<string | null>(null);
 
 	useEffect(() => {
 		const loadCategories = async () => {
@@ -65,25 +67,39 @@ export default function Home() {
 		})
 		.filter((category) => category.actions.length);
 
+	const layerData = categories
+		.find((cat) => cat.id === activeCategoryId)
+		?.actions.find((action) => action.id === selectedAction);
+
 	return (
-		<main className="min-h-dvh bg-white px-4 py-4 text-slate-900">
-			<div className="mx-auto w-full max-w-md">
-				<WeekTabs selectedDate={selectedDate} onChangeDate={setSelectedDate} />
+		<>
+			<main className="min-h-dvh bg-white px-4 py-4 text-slate-900">
+				<div className="mx-auto w-full max-w-md">
+					<WeekTabs selectedDate={selectedDate} onChangeDate={setSelectedDate} />
 
-				<CategoryTabs
-					categories={categories}
-					activeCategoryId={activeCategoryId}
-					onChangeCategoryId={setActiveCategoryId}
+					<CategoryTabs
+						categories={categories}
+						activeCategoryId={activeCategoryId}
+						onChangeCategoryId={setActiveCategoryId}
+						onAddRecord={setSelectedAction}
+					/>
+
+					{isRecordsLoading ? (
+						<div className="rounded-2xl bg-white p-5 text-center text-sm text-slate-500 shadow-sm">
+							기록을 불러오는 중입니다.
+						</div>
+					) : (
+						<DailyRecords categoriesWithRecords={categoriesWithRecords} records={records} />
+					)}
+				</div>
+			</main>
+			{selectedAction && (
+				<AddRecordSheet
+					data={layerData}
+					selectedDate={formatDate(selectedDate)}
+					close={setSelectedAction}
 				/>
-
-				{isRecordsLoading ? (
-					<div className="rounded-2xl bg-white p-5 text-center text-sm text-slate-500 shadow-sm">
-						기록을 불러오는 중입니다.
-					</div>
-				) : (
-					<DailyRecords categoriesWithRecords={categoriesWithRecords} records={records} />
-				)}
-			</div>
-		</main>
+			)}
+		</>
 	);
 }

@@ -19,3 +19,26 @@ export const getRecords = async (date: string) => {
 
 	return data;
 };
+
+export const createRecord = async ({
+	actionId,
+	minutes,
+	memo,
+}: {
+	actionId: string;
+	minutes?: number;
+	memo?: string;
+}) => {
+	const res = await fetch(`/api/records`, {
+		method: "POST",
+		body: JSON.stringify({ actionId, minutes, memo }),
+	});
+
+	const data = await res.json();
+
+	if (!res.ok) {
+		throw new Error(data.message ?? "front - record 생성 오류");
+	}
+
+	return data;
+};

@@ -43,3 +43,17 @@ export async function GET(request: Request) {
 		return Response.json({ message: "back - record 조회 오류 " }, { status: 500 });
 	}
 }
+
+export async function POST(request: Request) {
+	const body = await request.json();
+	const { actionId } = await body;
+	//검증
+
+	if (!actionId)
+		return Response.json({ message: "back - record 생성 : 액션ID 없음" }, { status: 500 });
+
+	// const record = prisma.record.create();
+	// return Response.json(record);
+
+	return Response.json({ data: "ㅎㅎ" });
+}
