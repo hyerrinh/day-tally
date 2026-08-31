@@ -21,17 +21,19 @@ export const getRecords = async (date: string) => {
 };
 
 export const createRecord = async ({
+	recordDate,
 	actionId,
-	minutes,
+	durationMinutes,
 	memo,
 }: {
+	recordDate: string;
 	actionId: string;
-	minutes?: number;
+	durationMinutes?: number;
 	memo?: string;
 }) => {
 	const res = await fetch(`/api/records`, {
 		method: "POST",
-		body: JSON.stringify({ actionId, minutes, memo }),
+		body: JSON.stringify({ recordDate, actionId, durationMinutes, memo }),
 	});
 
 	const data = await res.json();

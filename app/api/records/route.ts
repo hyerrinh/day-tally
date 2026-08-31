@@ -46,14 +46,24 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
 	const body = await request.json();
-	const { actionId } = await body;
+	const { actionId, recordDate, durationMinutes, memo } = await body;
 	//검증
 
 	if (!actionId)
 		return Response.json({ message: "back - record 생성 : 액션ID 없음" }, { status: 500 });
 
+	const record = await prisma.record.create({
+		data: {
+			userId,
+			recordDate: new Date(`${recordDate}T00:00:00.000Z`),
+			actionId,
+			durationMinutes,
+			memo,
+		},
+	});
+
 	// const record = prisma.record.create();
 	// return Response.json(record);
 
-	return Response.json({ data: "ㅎㅎ" });
+	return Response.json(record, { status: 201 });
 }

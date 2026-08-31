@@ -93,11 +93,17 @@ export default function Home() {
 					)}
 				</div>
 			</main>
-			{selectedAction && (
+			{selectedAction && layerData && (
 				<AddRecordSheet
 					data={layerData}
 					selectedDate={formatDate(selectedDate)}
-					close={setSelectedAction}
+					onAddRecord={(record) =>
+						setRecords((prev) => ({
+							...prev,
+							[record.actionId]: [...(prev[record.actionId] ?? []), record],
+						}))
+					}
+					close={() => setSelectedAction(null)}
 				/>
 			)}
 		</>
