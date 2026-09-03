@@ -22,6 +22,9 @@ const AddRecordSheet = ({ data, selectedDate, onAddRecord, close }: AddRecordShe
 			const hourValue = Number(hours);
 			const minuteValue = Number(minutes);
 
+			if (!Number.isInteger(hourValue) || !Number.isInteger(minuteValue)) {
+				return alert("front - record 추가 : 시간과 분은 정수만 입력 가능");
+			}
 			if (hourValue > 24) {
 				return alert("front - record 추가 : hours 24 초과");
 			}
