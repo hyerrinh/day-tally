@@ -12,6 +12,7 @@ type AddRecordSheetProps = {
 };
 
 const AddRecordSheet = ({ data, selectedDate, onAddRecord, close }: AddRecordSheetProps) => {
+	const [isAdding, setIsAdding] = useState(false);
 	const [hours, setHours] = useState("");
 	const [minutes, setMinutes] = useState("");
 	const [memo, setMemo] = useState("");
@@ -40,18 +41,23 @@ const AddRecordSheet = ({ data, selectedDate, onAddRecord, close }: AddRecordShe
 
 			const durationMinutes = hasDuration ? hourValue * 60 + minuteValue : undefined;
 
+			setIsAdding(true);
+
 			const record = await createRecord({
 				recordDate: selectedDate,
 				actionId,
 				durationMinutes,
 				memo: memo.trim() === "" ? undefined : memo.trim(),
 			});
+
 			onAddRecord(record);
 			close();
 		} catch (e) {
 			if (e instanceof Error) {
 				alert(e.message);
 			}
+		} finally {
+			setIsAdding(false);
 		}
 	};
 
@@ -98,9 +104,10 @@ const AddRecordSheet = ({ data, selectedDate, onAddRecord, close }: AddRecordShe
 					<button
 						type="button"
 						className="w-1/2 text-white bg-black"
+						disabled={isAdding}
 						onClick={() => addRecord({ actionId: data.id })}
 					>
-						추가
+						{isAdding ? "추가중" : "추가"}
 					</button>
 				</div>
 			</div>
