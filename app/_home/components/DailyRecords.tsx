@@ -1,4 +1,5 @@
 import type { CategoryWithActions, Records } from "@/app/_type/type";
+import { useState } from "react";
 
 type DailyRecordsProps = {
 	records: Records;
@@ -6,6 +7,12 @@ type DailyRecordsProps = {
 };
 
 const DailyRecords = ({ categoriesWithRecords, records }: DailyRecordsProps) => {
+	const [expandedActionId, setExpandedActionId] = useState<string | null>(null);
+
+	const toggleAction = (actionId: string) => {
+		setExpandedActionId((prev) => (prev === actionId ? null : actionId));
+	};
+
 	return (
 		<section className="pt-5">
 			<p className="mb-5 text-base font-bold text-slate-900">오늘 기록</p>
@@ -19,28 +26,80 @@ const DailyRecords = ({ categoriesWithRecords, records }: DailyRecordsProps) => 
 							{category.actions.map((action) => {
 								const actionRecords = records[action.id] ?? [];
 
+								const totalDuration = actionRecords.reduce(
+									(sum, record) => sum + (record.durationMinutes ?? 0),
+									0,
+								);
+
+								const hasDuration = actionRecords.some((record) => record.durationMinutes !== null);
+
+								const isExpanded = expandedActionId === action.id;
+
 								return (
-									<article key={action.id} className="py-4">
-										<div className="flex items-center justify-between">
+									<article key={action.id} className="py-2">
+										<button
+											type="button"
+											className="flex w-full items-center justify-between py-2 text-left"
+											aria-expanded={isExpanded}
+											onClick={() => toggleAction(action.id)}
+										>
 											<p className="text-[15px] font-semibold text-slate-800">{action.name}</p>
 
-											<p className="text-xs font-medium text-slate-400">{actionRecords.length}회</p>
-										</div>
+											<div className="flex items-center gap-2">
+												<p className="text-xs font-medium text-slate-400">
+													{actionRecords.length}회{hasDuration && ` · 총 ${totalDuration}분`}
+												</p>
 
-										<div className="mt-2 flex flex-col gap-1.5">
-											{actionRecords.map((record) => (
-												<div key={record.id} className="flex items-start justify-between gap-4">
-													<p className="min-w-0 text-sm text-slate-500">{record.memo || "기록"}</p>
+												<span className="text-xs text-slate-400">{isExpanded ? "▲" : "▼"}</span>
+											</div>
+										</button>
 
-													{record.durationMinutes !== null && (
-														<p className="shrink-0 text-sm font-medium text-slate-600">
-															{record.durationMinutes}
-															<span className="ml-0.5 text-xs text-slate-400">분</span>
-														</p>
-													)}
-												</div>
-											))}
-										</div>
+										{isExpanded && (
+											<div className="flex flex-col pb-2">
+												{actionRecords.map((record, index) => {
+													const hasMemo = Boolean(record.memo);
+													const hasRecordDuration = record.durationMinutes !== null;
+
+													return (
+														<div
+															key={record.id}
+															className="flex items-start gap-3 border-t border-slate-50 py-3 first:border-t-0"
+														>
+															<span className="shrink-0 text-xs font-medium text-slate-300">
+																{index + 1}
+															</span>
+
+															<div className="min-w-0 flex-1">
+																{hasRecordDuration && (
+																	<p className="text-sm font-medium text-slate-600">
+																		{record.durationMinutes}
+																		<span className="ml-0.5 text-xs text-slate-400">분</span>
+																	</p>
+																)}
+
+																{hasMemo && (
+																	<p className="mt-0.5 line-clamp-2 text-sm text-slate-500">
+																		{record.memo}
+																	</p>
+																)}
+
+																{!hasRecordDuration && !hasMemo && (
+																	<p className="text-sm text-slate-400">시간·메모 없이 기록</p>
+																)}
+															</div>
+
+															<button
+																type="button"
+																className="shrink-0 px-1 text-slate-400"
+																aria-label={`${action.name} 기록 ${index + 1} 메뉴`}
+															>
+																···
+															</button>
+														</div>
+													);
+												})}
+											</div>
+										)}
 									</article>
 								);
 							})}
