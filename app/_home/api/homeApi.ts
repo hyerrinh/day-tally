@@ -44,3 +44,16 @@ export const createRecord = async ({
 
 	return data;
 };
+
+export const deleteRecord = async ({ id }: { id: string }) => {
+	const res = await fetch(`/api/records/${id}`, {
+		method: "DELETE",
+	});
+	const data = await res.json();
+
+	if (!res.ok) {
+		throw new Error(data.message ?? "front - record 삭제 오류");
+	}
+
+	return data;
+};

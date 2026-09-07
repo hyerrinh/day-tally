@@ -89,7 +89,16 @@ export default function Home() {
 							기록을 불러오는 중입니다.
 						</div>
 					) : (
-						<DailyRecords categoriesWithRecords={categoriesWithRecords} records={records} />
+						<DailyRecords
+							categoriesWithRecords={categoriesWithRecords}
+							records={records}
+							onDeleteRecord={(record) => {
+								setRecords((prev) => ({
+									...prev,
+									[record.actionId]: prev[record.actionId].filter((item) => item.id !== record.id),
+								}));
+							}}
+						/>
 					)}
 				</div>
 			</main>
