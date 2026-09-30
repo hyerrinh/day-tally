@@ -7,7 +7,7 @@ import CategoryTabs from "./_home/components/CategoryTabs";
 import AddRecordSheet from "./_home/components/AddRecordSheet";
 import type { CategoryWithActions, Records } from "./_type/type";
 import { getRecords } from "./_home/api/homeApi";
-import { getCategories } from "./settings/categories/_api/categoryApi";
+import { createAction, getCategories } from "./settings/categories/_api/categoryApi";
 
 export default function Home() {
 	const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
@@ -52,6 +52,17 @@ export default function Home() {
 		loadRecords();
 	}, [selectedDate]);
 
+	const handleAddAction = async ({ categoryId, name }: { categoryId: string; name: string }) => {
+		const action = await createAction({ categoryId, name });
+		setCategories((prev) =>
+			prev.map((category) =>
+				category.id === categoryId
+					? { ...category, actions: [...category.actions, action] }
+					: category,
+			),
+		);
+	};
+
 	if (isCategoriesLoading) {
 		return (
 			<main className="flex min-h-dvh items-center justify-center bg-neutral-50">
@@ -82,6 +93,7 @@ export default function Home() {
 						activeCategoryId={activeCategoryId}
 						onChangeCategoryId={setActiveCategoryId}
 						onAddRecord={setSelectedAction}
+						onAddAction={handleAddAction}
 					/>
 
 					{isRecordsLoading ? (
