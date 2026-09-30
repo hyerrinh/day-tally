@@ -16,8 +16,8 @@ const CategoryTabs = ({
 	const actions = categories.find((category) => category.id === activeCategoryId)?.actions ?? [];
 
 	return (
-		<section className="border-b border-slate-100 py-4">
-			<p className="mb-3 text-sm font-semibold text-slate-800">빠른 기록</p>
+		<section className="border-b border-neutral-100 py-4">
+			<p className="mb-3 text-sm font-semibold text-neutral-800">빠른 기록</p>
 			<ul className="flex gap-1 overflow-x-auto">
 				{categories.map((category) => {
 					const isActive = category.id === activeCategoryId;
@@ -28,7 +28,7 @@ const CategoryTabs = ({
 								type="button"
 								onClick={() => onChangeCategoryId(category.id)}
 								className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-									isActive ? "bg-slate-800 text-white" : "text-slate-400 hover:text-slate-700"
+									isActive ? "bg-neutral-800 text-white" : "text-neutral-400 hover:text-neutral-700"
 								}`}
 							>
 								{category.name}
@@ -43,7 +43,7 @@ const CategoryTabs = ({
 					<li key={action.id} className="shrink-0">
 						<button
 							type="button"
-							className="rounded-full px-2.5 py-1.5 text-[11px] font-medium text-slate-600 transition-colors hover:border-red-300 hover:text-red-500 active:bg-red-50"
+							className="rounded-full px-2.5 py-1.5 text-[11px] font-medium text-neutral-600 transition-colors hover:border-red-300 hover:text-red-500 active:bg-red-50"
 							onClick={() => onAddRecord(action.id)}
 						>
 							+ {action.name}

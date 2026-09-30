@@ -54,8 +54,8 @@ export default function Home() {
 
 	if (isCategoriesLoading) {
 		return (
-			<main className="flex min-h-dvh items-center justify-center bg-slate-50">
-				<p className="text-sm text-slate-500">카테고리를 불러오는 중입니다.</p>
+			<main className="flex min-h-dvh items-center justify-center bg-neutral-50">
+				<p className="text-sm text-neutral-500">카테고리를 불러오는 중입니다.</p>
 			</main>
 		);
 	}
@@ -73,7 +73,7 @@ export default function Home() {
 
 	return (
 		<>
-			<main className="min-h-dvh bg-white px-4 py-4 text-slate-900">
+			<main className="min-h-dvh bg-white px-4 py-4 text-neutral-900">
 				<div className="mx-auto w-full max-w-md">
 					<WeekTabs selectedDate={selectedDate} onChangeDate={setSelectedDate} />
 
@@ -85,7 +85,7 @@ export default function Home() {
 					/>
 
 					{isRecordsLoading ? (
-						<div className="rounded-2xl bg-white p-5 text-center text-sm text-slate-500 shadow-sm">
+						<div className="rounded-2xl bg-white p-5 text-center text-sm text-neutral-500 shadow-sm">
 							기록을 불러오는 중입니다.
 						</div>
 					) : (
