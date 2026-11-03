@@ -6,10 +6,35 @@ export const POST = async (request: Request, { params }: { params: Promise<{ id:
 	try {
 		const body = await request.json();
 		const { id } = await params;
-		const { name } = body;
+		const { name, defaultDurationMinutes, durationStepMinutes } = body;
 
 		if (typeof name !== "string") {
 			return Response.json({ message: "back : action 생성 - name 타입 오류" }, { status: 400 });
+		}
+
+		if (defaultDurationMinutes !== undefined && defaultDurationMinutes !== null) {
+			if (!Number.isInteger(defaultDurationMinutes)) {
+				return Response.json(
+					{ message: "back : action 생성 - defaultDurationMinutes 정수 아님" },
+					{ status: 400 },
+				);
+			}
+			if (defaultDurationMinutes < 0 || defaultDurationMinutes > 1439) {
+				return Response.json(
+					{ message: "back : action 생성 - defaultDurationMinutes 0 미만 이거나 1439 초과" },
+					{ status: 400 },
+				);
+			}
+		}
+
+		if (
+			durationStepMinutes !== undefined &&
+			![1, 5, 10, 15, 30, 60].includes(durationStepMinutes)
+		) {
+			return Response.json(
+				{ message: "back : action 생성 - durationStepMinutes 허용값 아님" },
+				{ status: 400 },
+			);
 		}
 
 		const trimmedName = name.trim();
@@ -55,6 +80,11 @@ export const POST = async (request: Request, { params }: { params: Promise<{ id:
 				normalizedName,
 				categoryId: id,
 				sortOrder: 0,
+				// 0은 시간 없음 (COMMON-006)
+				...(defaultDurationMinutes !== undefined && {
+					defaultDurationMinutes: defaultDurationMinutes || null,
+				}),
+				...(durationStepMinutes !== undefined && { durationStepMinutes }),
 			},
 		});
 

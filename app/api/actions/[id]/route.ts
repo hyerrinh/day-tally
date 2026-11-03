@@ -4,13 +4,38 @@ const userId = "550e8400-e29b-41d4-a716-446655440000";
 
 export const PATCH = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
 	try {
-		const { name, isHidden } = await request.json();
+		const { name, isHidden, defaultDurationMinutes, durationStepMinutes } = await request.json();
 		const { id } = await params;
 		let trimmedName: string | undefined;
 		let normalizedName: string | undefined;
 
 		if (isHidden !== undefined && typeof isHidden !== "boolean") {
 			return Response.json({ message: "back : action 수정 - isHidden type 오류" }, { status: 400 });
+		}
+
+		if (defaultDurationMinutes !== undefined && defaultDurationMinutes !== null) {
+			if (!Number.isInteger(defaultDurationMinutes)) {
+				return Response.json(
+					{ message: "back : action 수정 - defaultDurationMinutes 정수 아님" },
+					{ status: 400 },
+				);
+			}
+			if (defaultDurationMinutes < 0 || defaultDurationMinutes > 1439) {
+				return Response.json(
+					{ message: "back : action 수정 - defaultDurationMinutes 0 미만 이거나 1439 초과" },
+					{ status: 400 },
+				);
+			}
+		}
+
+		if (
+			durationStepMinutes !== undefined &&
+			![1, 5, 10, 15, 30, 60].includes(durationStepMinutes)
+		) {
+			return Response.json(
+				{ message: "back : action 수정 - durationStepMinutes 허용값 아님" },
+				{ status: 400 },
+			);
 		}
 		const existingAction = await prisma.action.findFirst({ where: { id, userId } });
 
@@ -55,6 +80,11 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 			data: {
 				...(name !== undefined && { name: trimmedName, normalizedName }),
 				...(isHidden !== undefined && { isHidden }),
+				// 0은 시간 없음 (COMMON-006)
+				...(defaultDurationMinutes !== undefined && {
+					defaultDurationMinutes: defaultDurationMinutes || null,
+				}),
+				...(durationStepMinutes !== undefined && { durationStepMinutes }),
 			},
 		});
 

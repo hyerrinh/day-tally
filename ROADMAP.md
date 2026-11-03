@@ -23,7 +23,7 @@
 - [ ] records GET에 행동·카테고리 포함 + 정렬 (HOME-006, REC-003)
 - [x] 기록 시간 검증 1~1439분으로 변경 (COMMON-006)
 - [ ] 기록 생성·수정 시 미래 날짜 차단 (REC-001, REC-004)
-- [ ] 행동 `defaultDurationMinutes` · `durationStepMinutes` 받기 (ACT-002, ACT-003, ACT-004)
+- [x] 행동 `defaultDurationMinutes` · `durationStepMinutes` 받기 (ACT-002, ACT-003, ACT-004)
 - [x] `/api/users` 삭제
 
 ## 4단계: 인증 헬퍼
