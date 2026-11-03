@@ -63,6 +63,7 @@ export async function POST(request: Request) {
 			앞뒤 공백을 제거했을 때 빈 문자열이면 400
 			현재 사용자의 액션 중 해당 ID가 없으면 404
 			숨겨진 액션이면 등록 거부
+			숨겨진 카테고리의 액션이면 등록 거부 (REC-001)
 			DB 생성에는 공백 제거한 ID 사용
 			참고: 존재 여부·소유권·숨김 여부는 Prisma 조회 한 번으로 함께 확인할 수 있어.
 		*/
@@ -81,12 +82,12 @@ export async function POST(request: Request) {
 		}
 
 		const existingAction = await prisma.action.findFirst({
-			where: { userId, id: trimmedActionId, isHidden: false },
+			where: { userId, id: trimmedActionId, isHidden: false, category: { isHidden: false } },
 		});
 
 		if (!existingAction) {
 			return Response.json(
-				{ message: "back - record 생성 - userId, id가 일치하고 isHidden false인 action 없음" },
+				{ message: "back - record 생성 - 숨기지 않은 action 또는 category 없음" },
 				{ status: 404 },
 			);
 		}
