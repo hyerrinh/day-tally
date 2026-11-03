@@ -21,7 +21,7 @@
 - [ ] 기록 PATCH (REC-004)
 - [x] 기록 삭제 시 없는 기록이면 404 (REC-006)
 - [ ] records GET에 행동·카테고리 포함 + 정렬 (HOME-006, REC-003)
-- [ ] 기록 시간 검증 1~1439분으로 변경 (COMMON-006)
+- [x] 기록 시간 검증 1~1439분으로 변경 (COMMON-006)
 - [ ] 기록 생성·수정 시 미래 날짜 차단 (REC-001, REC-004)
 - [ ] 행동 `defaultDurationMinutes` · `durationStepMinutes` 받기 (ACT-002, ACT-003, ACT-004)
 - [ ] `/api/users` 삭제

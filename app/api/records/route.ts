@@ -126,8 +126,8 @@ export async function POST(request: Request) {
 			없어도 됨
 			존재한다면 number여야 함
 			정수여야 함
-			0 이상 1440 이하여야 함
-			0은 정상값이므로 truthy/falsy 검사로 제외하면 안 됨
+			0 이상 1439 이하여야 함
+			0은 시간 없음으로 보고 저장하지 않음 (COMMON-006)
 		*/
 
 		if (durationMinutes !== undefined) {
@@ -144,10 +144,10 @@ export async function POST(request: Request) {
 					{ status: 400 },
 				);
 			}
-			if (durationMinutes < 0 || durationMinutes > 1440) {
+			if (durationMinutes < 0 || durationMinutes > 1439) {
 				return Response.json(
 					{
-						message: "back - record 생성 : durationMinutes 0 미만 이거나 1440 초과",
+						message: "back - record 생성 : durationMinutes 0 미만 이거나 1439 초과",
 					},
 					{ status: 400 },
 				);
@@ -182,7 +182,7 @@ export async function POST(request: Request) {
 				userId,
 				recordDate: targetDate,
 				actionId: trimmedActionId,
-				...(durationMinutes !== undefined && { durationMinutes }),
+				...(durationMinutes !== undefined && durationMinutes !== 0 && { durationMinutes }),
 				...(trimmedMemo && { memo: trimmedMemo }),
 			},
 		});
