@@ -76,6 +76,7 @@ model Action {
   normalizedName         String   @db.VarChar(15)
   icon                   String   @default("default")
   defaultDurationMinutes Int?
+  durationStepMinutes    Int      @default(5)
   isHidden               Boolean  @default(false)
   sortOrder              Int
   createdAt              DateTime @default(now())
