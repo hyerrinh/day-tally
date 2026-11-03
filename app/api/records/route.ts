@@ -17,11 +17,18 @@ export async function GET(request: Request) {
 
 		const targetDate = new Date(`${date}T00:00:00.000Z`);
 
+		const userSetting = await prisma.userSetting.findUnique({ where: { userId } });
+		const sortOrder = userSetting?.recordSortOrder === "OLDEST_FIRST" ? "asc" : "desc";
+
 		const records = await prisma.record.findMany({
 			where: {
 				recordDate: targetDate,
 				userId,
 			},
+			include: {
+				action: { include: { category: true } },
+			},
+			orderBy: { createdAt: sortOrder },
 		});
 
 		type RecordItem = (typeof records)[number];
