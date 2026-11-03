@@ -8,6 +8,12 @@ export const DELETE = async (
 ) => {
 	const { id } = await params;
 
+	const existingRecord = await prisma.record.findFirst({ where: { id, userId } });
+
+	if (!existingRecord) {
+		return Response.json({ message: "back : record 삭제 - record 없음" }, { status: 404 });
+	}
+
 	const record = await prisma.record.delete({ where: { userId, id } });
 
 	return Response.json(record);

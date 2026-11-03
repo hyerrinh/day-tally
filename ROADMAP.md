@@ -8,7 +8,7 @@
 ## 2단계: API 다듬기
 
 - [ ] 기록 PATCH
-- [ ] 기록 삭제 시 없는 기록이면 404
+- [x] 기록 삭제 시 없는 기록이면 404
 - [ ] records GET에 행동·카테고리 포함 + 정렬
 - [ ] defaultDurationMinutes 받기
 - [ ] 웹 주 이동
