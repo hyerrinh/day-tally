@@ -25,39 +25,42 @@ enum SortOrder {
 model User {
   id        String   @id @db.Uuid
   email     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   authAccounts AuthAccount[]
   categories   Category[]
   actions      Action[]
   records      Record[]
   userSetting  UserSetting?
+
+  @@map("users")
 }
 
 model AuthAccount {
   id                String   @id @default(uuid()) @db.Uuid
-  userId            String   @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
   provider          Provider
-  providerAccountId String
-  providerEmail     String?
-  createdAt         DateTime @default(now())
+  providerAccountId String   @map("provider_account_id")
+  providerEmail     String?  @map("provider_email")
+  createdAt         DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@map("auth_accounts")
 }
 
 model Category {
   id             String   @id @default(uuid()) @db.Uuid
-  userId         String   @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
   name           String   @db.VarChar(15)
-  normalizedName String   @db.VarChar(15)
+  normalizedName String   @map("normalized_name") @db.VarChar(15)
   icon           String   @default("default")
-  isHidden       Boolean  @default(false)
-  sortOrder      Int
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  isHidden       Boolean  @default(false) @map("is_hidden")
+  sortOrder      Int      @map("sort_order")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
 
   actions            Action[]
   selectedInSettings UserSetting[]
@@ -66,21 +69,22 @@ model Category {
 
   @@unique([userId, normalizedName])
   @@index([userId, isHidden, sortOrder])
+  @@map("categories")
 }
 
 model Action {
   id                     String   @id @default(uuid()) @db.Uuid
-  userId                 String   @db.Uuid
-  categoryId             String   @db.Uuid
+  userId                 String   @map("user_id") @db.Uuid
+  categoryId             String   @map("category_id") @db.Uuid
   name                   String   @db.VarChar(15)
-  normalizedName         String   @db.VarChar(15)
+  normalizedName         String   @map("normalized_name") @db.VarChar(15)
   icon                   String   @default("default")
-  defaultDurationMinutes Int?
-  durationStepMinutes    Int      @default(5)
-  isHidden               Boolean  @default(false)
-  sortOrder              Int
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  defaultDurationMinutes Int?     @map("default_duration_minutes")
+  durationStepMinutes    Int      @default(5) @map("duration_step_minutes")
+  isHidden               Boolean  @default(false) @map("is_hidden")
+  sortOrder              Int      @map("sort_order")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
 
   records Record[]
 
@@ -89,34 +93,38 @@ model Action {
 
   @@unique([categoryId, normalizedName])
   @@index([userId, categoryId, isHidden, sortOrder])
+  @@map("actions")
 }
 
 model Record {
   id              String   @id @default(uuid()) @db.Uuid
-  userId          String   @db.Uuid
-  actionId        String   @db.Uuid
-  recordDate      DateTime @db.Date
-  durationMinutes Int?
+  userId          String   @map("user_id") @db.Uuid
+  actionId        String   @map("action_id") @db.Uuid
+  recordDate      DateTime @map("record_date") @db.Date
+  durationMinutes Int?     @map("duration_minutes")
   memo            String?  @db.VarChar(500)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   action Action @relation(fields: [actionId], references: [id], onDelete: Restrict)
 
   @@index([userId, recordDate])
   @@index([userId, actionId, recordDate, createdAt])
+  @@map("records")
 }
 
 model UserSetting {
   id                     String    @id @default(uuid()) @db.Uuid
-  userId                 String    @unique @db.Uuid
-  recordSortOrder        SortOrder @default(NEWEST_FIRST)
-  lastSelectedCategoryId String?   @db.Uuid
+  userId                 String    @unique @map("user_id") @db.Uuid
+  recordSortOrder        SortOrder @default(NEWEST_FIRST) @map("record_sort_order")
+  lastSelectedCategoryId String?   @map("last_selected_category_id") @db.Uuid
   timezone               String?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
 
   user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   lastSelectedCategory Category? @relation(fields: [lastSelectedCategoryId], references: [id], onDelete: SetNull)
+
+  @@map("user_settings")
 }
