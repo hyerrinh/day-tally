@@ -6,7 +6,7 @@
 ## 1단계: 스키마 정리 (로컬, Supabase 이전 전)
 
 - [x] User.email null 허용 + UNIQUE 제거
-- [ ] User.id 기본값 제거 (Supabase Auth id 사용)
+- [x] User.id 기본값 제거 (Supabase Auth id 사용)
 - [ ] Action에 `durationStepMinutes` 추가 (기본 5)
 - [ ] 시간 Check 제약 추가 (1~1439분, ± 단위 1·5·10·15·30·60)
 - [ ] 테이블·컬럼 snake_case (`@@map` / `@map`)
