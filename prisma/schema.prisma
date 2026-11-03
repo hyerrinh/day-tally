@@ -25,8 +25,8 @@ enum SortOrder {
 model User {
   id        String   @id @db.Uuid
   email     String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   authAccounts AuthAccount[]
   categories   Category[]
@@ -43,7 +43,7 @@ model AuthAccount {
   provider          Provider
   providerAccountId String   @map("provider_account_id")
   providerEmail     String?  @map("provider_email")
-  createdAt         DateTime @default(now()) @map("created_at")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -59,8 +59,8 @@ model Category {
   icon           String   @default("default")
   isHidden       Boolean  @default(false) @map("is_hidden")
   sortOrder      Int      @map("sort_order")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   actions            Action[]
   selectedInSettings UserSetting[]
@@ -83,8 +83,8 @@ model Action {
   durationStepMinutes    Int      @default(5) @map("duration_step_minutes")
   isHidden               Boolean  @default(false) @map("is_hidden")
   sortOrder              Int      @map("sort_order")
-  createdAt              DateTime @default(now()) @map("created_at")
-  updatedAt              DateTime @updatedAt @map("updated_at")
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   records Record[]
 
@@ -103,8 +103,8 @@ model Record {
   recordDate      DateTime @map("record_date") @db.Date
   durationMinutes Int?     @map("duration_minutes")
   memo            String?  @db.VarChar(500)
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   action Action @relation(fields: [actionId], references: [id], onDelete: Restrict)
@@ -120,8 +120,8 @@ model UserSetting {
   recordSortOrder        SortOrder @default(NEWEST_FIRST) @map("record_sort_order")
   lastSelectedCategoryId String?   @map("last_selected_category_id") @db.Uuid
   timezone               String?
-  createdAt              DateTime  @default(now()) @map("created_at")
-  updatedAt              DateTime  @updatedAt @map("updated_at")
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt              DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   lastSelectedCategory Category? @relation(fields: [lastSelectedCategoryId], references: [id], onDelete: SetNull)
