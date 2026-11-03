@@ -19,6 +19,7 @@
 | 8 | 테이블·컬럼 이름 | snake_case (`@@map`/`@map`), Supabase 이전 전에 변경 | Postgres 관례, SQL·RLS 작성 편의. 데이터 쌓이기 전이 비용 최소 | DB 설계서 1-4 (V1 유지), ROADMAP |
 | 9 | User id | Supabase Auth `auth.users.id`를 User.id로 사용 | getUserId·RLS 단순화. AuthAccount 유지 여부는 인증 단계에서 재검토 | DB 설계서 4·5장, ROADMAP |
 | 10 | 웹의 역할 | API 확인용 테스트 화면. 정식 제품은 Expo 앱 | 명세서가 모바일 UX 기준. 웹 UI 작업은 최소화 | ROADMAP("웹 주 이동" 제거) |
+| 11 | 서버 미래 날짜 판단 | 지금은 가장 빠른 시간대(UTC+14)의 오늘보다 뒤면 거부. 인증 단계에서 사용자 시간대를 저장하면 그 시간대 기준으로 변경 | 서버(UTC)와 사용자 날짜가 달라 오늘 기록을 잘못 막는 일을 피함. 최대 하루 뒤까지는 통과할 수 있으나 앱 화면에서 막음(HOME-005) | ROADMAP 3·4단계 |
 
 ## 남은 미정
 

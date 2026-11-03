@@ -128,6 +128,13 @@ export async function POST(request: Request) {
 			);
 		}
 
+		// 가장 빠른 시간대(UTC+14)의 오늘보다 뒤면 미래 날짜 (decisions.md 11)
+		const latestToday = new Date(Date.now() + 14 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+		if (recordDate > latestToday) {
+			return Response.json({ message: "back - record 생성 - 미래 날짜" }, { status: 400 });
+		}
+
 		/*
 			3. durationMinutes
 			없어도 됨

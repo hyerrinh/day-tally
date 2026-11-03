@@ -22,7 +22,7 @@
 - [x] 기록 삭제 시 없는 기록이면 404 (REC-006)
 - [x] records GET에 행동·카테고리 포함 + 정렬 (HOME-006, REC-003)
 - [x] 기록 시간 검증 1~1439분으로 변경 (COMMON-006)
-- [ ] 기록 생성·수정 시 미래 날짜 차단 (REC-001, REC-004)
+- [x] 기록 생성·수정 시 미래 날짜 차단 (REC-001, REC-004) — UTC+14 기준 임시 판단
 - [x] 행동 `defaultDurationMinutes` · `durationStepMinutes` 받기 (ACT-002, ACT-003, ACT-004)
 - [x] `/api/users` 삭제
 
@@ -32,6 +32,7 @@
 - [ ] 하드코딩된 userId를 `getUserId`로 교체
 - [ ] 신규 유저 기본 데이터 생성 (AUTH-002)
 - [ ] AuthAccount 유지 여부 · Supabase 자동 계정 연결 설정 확인
+- [ ] 사용자 시간대 저장 후 미래 날짜 판단을 사용자 시간대 기준으로 변경 (결정 11)
 
 ## 5단계: Expo 앱 뼈대
 
