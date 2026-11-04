@@ -6,7 +6,13 @@ export const GET = async () => {
 	try {
 		const categories = await prisma.category.findMany({
 			where: { userId, isHidden: false },
-			include: { actions: { where: { isHidden: false } } },
+			include: {
+				actions: {
+					where: { isHidden: false },
+					orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+				},
+			},
+			orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
 		});
 		return Response.json(categories);
 	} catch (e) {
@@ -51,13 +57,19 @@ export const POST = async (request: Request) => {
 			return Response.json({ message: "back : category 생성 - 이름 중복" }, { status: 409 });
 		}
 
+		// 최초 100, 이후 최댓값 + 100. 동시 요청으로 겹치면 createdAt으로 정렬 (decisions.md 12)
+		const { _max } = await prisma.category.aggregate({
+			where: { userId },
+			_max: { sortOrder: true },
+		});
+
 		const category = await prisma.category.create({
 			data: {
 				userId,
 				name: trimmedName,
 				normalizedName,
 				icon: icon ?? "default",
-				sortOrder: 0,
+				sortOrder: (_max.sortOrder ?? 0) + 100,
 			},
 			include: { actions: true },
 		});

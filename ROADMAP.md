@@ -26,7 +26,7 @@
 - [x] 행동 `defaultDurationMinutes` · `durationStepMinutes` 받기 (ACT-002, ACT-003, ACT-004)
 - [x] `/api/users` 삭제
 - [x] 숨긴 카테고리의 행동 기록 차단 (REC-001)
-- [ ] sortOrder 생성 규칙 적용 — 카테고리 최댓값+100, 행동 최댓값+1, 동시 요청 처리 방식 결정 필요 (CAT-001, ACT-001, DB 설계서 6-6·7-9·20)
+- [x] sortOrder 생성 규칙 적용 — 카테고리 최댓값+100, 행동 최댓값+1, 조회 시 sortOrder·createdAt 정렬 (CAT-001, ACT-001, 결정 12)
 
 ## 4단계: 인증 헬퍼
 
