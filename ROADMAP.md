@@ -30,7 +30,7 @@
 
 ## 4단계: 인증 헬퍼
 
-- [ ] `getUserId` 헬퍼 작성 (Supabase 토큰 검증)
+- [ ] `getUserId` 헬퍼 작성 (Supabase 토큰 검증, 결정 13) — `lib/auth.ts` 작성 완료, 실제 토큰 검증 확인 남음
 - [ ] 하드코딩된 userId를 `getUserId`로 교체
 - [ ] 신규 유저 기본 데이터 생성 (AUTH-002)
 - [ ] AuthAccount 유지 여부 · Supabase 자동 계정 연결 설정 확인
