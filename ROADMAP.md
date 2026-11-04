@@ -33,7 +33,7 @@
 - [ ] `getUserId` 헬퍼 작성 (Supabase 토큰 검증, 결정 13) — `lib/auth.ts` 작성 완료, 실제 토큰 검증 확인 남음
 - [ ] 하드코딩된 userId를 `getUserId`로 교체
 - [x] 신규 유저 기본 데이터 생성 — `POST /api/me/init` (AUTH-002, 결정 14). 실제 토큰으로 API 호출 확인은 getUserId 확인 때 같이
-- [ ] AuthAccount 유지 여부 · Supabase 자동 계정 연결 설정 확인
+- [x] AuthAccount 삭제 · 같은 이메일은 Supabase 자동 연결 사용 (결정 15·16)
 - [ ] 사용자 시간대 저장 후 미래 날짜 판단을 사용자 시간대 기준으로 변경 (결정 11)
 
 ## 5단계: Expo 앱 뼈대
@@ -69,5 +69,5 @@
 ## 미정
 
 - [ ] 레포 구조 (5단계 전)
-- [ ] AuthAccount 유지 여부 (4단계)
+- [x] AuthAccount 유지 여부 (4단계) — 삭제
 - [ ] 아이콘 저장 방식 (이모지 문자열 / 아이콘 코드)

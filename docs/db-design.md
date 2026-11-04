@@ -99,15 +99,14 @@ Prisma의 `@@map`, `@map`을 사용해 연결한다.
 | 테이블 | 역할 |
 | --- | --- |
 | `users` | 앱 사용자 계정 |
-| `auth_accounts` | Google·Apple 로그인 계정 정보 |
 | `categories` | 사용자가 생성한 카테고리 |
 | `actions` | 카테고리에 속한 행동 |
 | `records` | 사용자가 실제로 수행한 행동 기록 |
 | `user_settings` | 사용자별 앱 설정 |
 
-MVP의 핵심 테이블은 총 6개다.
+MVP의 핵심 테이블은 총 5개다.
 
-`auth_accounts`의 유지 여부는 인증 단계에서 다시 검토한다. (5-5 참고)
+로그인 provider 정보는 Supabase Auth(`auth.identities`)가 관리한다. (V1.1, 5장 참고)
 
 ---
 
@@ -117,7 +116,6 @@ MVP의 핵심 테이블은 총 6개다.
 
 ```
 User
- ├── 1:N ── AuthAccount
  ├── 1:N ── Category
  ├── 1:N ── Action
  ├── 1:N ── Record
@@ -134,7 +132,6 @@ Action
 
 ```mermaid
 erDiagram
-    USER ||--o{ AUTH_ACCOUNT : has
     USER ||--o{ CATEGORY : owns
     USER ||--o{ ACTION : owns
     USER ||--o{ RECORD : owns
@@ -148,15 +145,6 @@ erDiagram
         string email
         datetime created_at
         datetime updated_at
-    }
-
-    AUTH_ACCOUNT {
-        uuid id PK
-        uuid user_id FK
-        string provider
-        string provider_account_id
-        string provider_email
-        datetime created_at
     }
 
     CATEGORY {
@@ -216,7 +204,7 @@ erDiagram
 
 앱 사용자 자체를 나타낸다.
 
-Google 또는 Apple 로그인 정보는 `auth_accounts`에서 별도로 관리한다.
+Google 또는 Apple 로그인 정보는 Supabase Auth(`auth.identities`)가 관리한다. (V1.1)
 
 ## 4-2. 컬럼 정의
 
@@ -232,14 +220,13 @@ Google 또는 Apple 로그인 정보는 `auth_accounts`에서 별도로 관리�
 - `id`는 Supabase Auth의 `auth.users.id`를 그대로 저장한다. (V1.1)
   - 인증 토큰에서 꺼낸 사용자 id가 곧 `userId`가 된다.
   - RLS를 사용할 경우 `auth.uid() = user_id` 형태로 작성할 수 있다.
-- Google과 Apple의 이메일이 같아도 자동으로 같은 사용자로 합치지 않는다.
+- (V1.1 변경) Google과 Apple의 이메일이 같으면 Supabase가 같은 사용자로 연결한다.
 - 이메일은 화면 표시용 또는 연락 정보로 사용할 수 있다.
 - 이메일은 null을 허용하고 UNIQUE 제약을 두지 않는다. (V1.1)
   - Apple은 첫 로그인 때만 이메일을 제공할 수 있다.
-  - 같은 이메일의 Google·Apple 계정을 독립 사용자로 둘 수 있어야 한다.
-- 실제 로그인 계정 식별에는 이메일이 아니라 `provider + provider_account_id` 조합(또는 Supabase Auth id)을 사용한다.
+- 실제 로그인 계정 식별에는 이메일이 아니라 Supabase Auth id를 사용한다.
 - Apple 이메일 가리기를 사용하는 경우 중계 이메일을 저장할 수 있다.
-- 이메일을 계정 통합의 기준으로 사용하지 않는다.
+- 앱 DB의 이메일은 계정 연결 기준으로 사용하지 않는다. (연결은 Supabase가 처리)
 
 > V1.1 메모: 현재 코드는 `email`이 `NOT NULL` + `UNIQUE`다. 스키마 정리 단계에서 변경한다.
 
@@ -249,7 +236,6 @@ Google 또는 Apple 로그인 정보는 `auth_accounts`에서 별도로 관리�
 
 ```
 User 삭제
-→ AuthAccount 삭제
 → Category 삭제
 → Action 삭제
 → Record 삭제
@@ -262,53 +248,13 @@ Supabase Auth 사용자(`auth.users`) 삭제도 탈퇴 처리에 포함한다.
 
 ---
 
-# 5. auth_accounts 테이블
+# 5. auth_accounts 테이블 (V1.1 삭제)
 
-## 5-1. 역할
+V1에서는 Google·Apple 로그인 계정을 저장하는 테이블이었으나 삭제했다. (결정 기록 15·16)
 
-사용자의 SNS 로그인 계정을 저장한다.
-
-현재는 사용자 한 명당 로그인 계정 한 개를 사용하지만, 나중에 계정 연결 기능을 추가할 수 있도록 별도 테이블로 분리한다.
-
-## 5-2. 컬럼 정의
-
-| 컬럼 | 타입 | Null | 기본값 | 설명 |
-| --- | --- | --- | --- | --- |
-| `id` | UUID | X | UUID 생성 | 인증 계정 ID |
-| `user_id` | UUID | X |  | 사용자 ID |
-| `provider` | ENUM | X |  | `GOOGLE`, `APPLE` |
-| `provider_account_id` | VARCHAR(255) | X |  | SNS가 제공하는 고유 사용자 ID |
-| `provider_email` | VARCHAR(320) | O |  | SNS에서 제공받은 이메일 |
-| `created_at` | TIMESTAMPTZ | X | 현재 시각 | 생성 시각 |
-
-`updated_at`은 두지 않는다.
-
-## 5-3. Unique 제약
-
-```
-UNIQUE(provider, provider_account_id)
-```
-
-같은 Google 또는 Apple 계정으로 앱 사용자가 중복 생성되는 것을 방지한다.
-
-## 5-4. 관계
-
-```
-AuthAccount N : 1 User
-```
-
-현재 MVP에서는 한 사용자에게 인증 계정 한 개만 연결되지만, DB 구조상 여러 인증 계정을 연결할 수 있다.
-
-실제 계정 연결 기능은 MVP에서 제공하지 않는다.
-
-## 5-5. 유지 여부 (V1.1 추가)
-
-User.id로 Supabase Auth id를 사용하면 provider 정보는 Supabase Auth(`auth.identities`)에도 저장된다.
-
-인증 단계에서 다음을 확인하고 이 테이블의 유지 여부를 결정한다.
-
-- 앱 DB에서 provider 정보를 직접 조회할 필요가 있는지
-- Supabase의 자동 계정 연결(identity linking)이 "자동 계정 통합 안 함" 정책과 충돌하지 않는지
+- User.id로 Supabase Auth id를 사용하므로 provider 정보는 Supabase Auth(`auth.identities`)에 저장된다.
+- Supabase는 이메일이 같은 계정을 자동으로 한 사용자로 연결한다.
+- 다른 이메일 계정 연결이 필요해지면 Supabase `linkIdentity`를 사용한다.
 
 ---
 
@@ -837,7 +783,6 @@ America/New_York
 
 | 부모 | 자식 | 삭제 정책 |
 | --- | --- | --- |
-| User | AuthAccount | CASCADE |
 | User | Category | CASCADE |
 | User | Action | CASCADE |
 | User | Record | CASCADE |
@@ -1078,11 +1023,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum AuthProvider {
-  GOOGLE
-  APPLE
-}
-
 enum RecordSortOrder {
   NEWEST_FIRST
   OLDEST_FIRST
@@ -1094,28 +1034,12 @@ model User {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
 
-  authAccounts AuthAccount[]
   categories   Category[]
   actions      Action[]
   records      Record[]
   setting      UserSetting?
 
   @@map("users")
-}
-
-model AuthAccount {
-  id                String       @id @default(uuid()) @db.Uuid
-  userId            String       @map("user_id") @db.Uuid
-  provider          AuthProvider
-  providerAccountId String       @map("provider_account_id") @db.VarChar(255)
-  providerEmail     String?      @map("provider_email") @db.VarChar(320)
-  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-  @@index([userId])
-  @@map("auth_accounts")
 }
 
 model Category {
@@ -1247,7 +1171,6 @@ DB Check Constraint는 서버 버그나 직접 DB 접근으로 잘못된 값이 
 
 ```
 User
-AuthAccount (유지 시)
 UserSetting
 Category 3개
 Action 6개
@@ -1289,9 +1212,8 @@ Action 6개
 2. actions
 3. categories
 4. user_settings
-5. auth_accounts
-6. users
-7. Supabase auth.users
+5. users
+6. Supabase auth.users
 ```
 
 또는 User의 Cascade 관계를 활용할 수 있다.
@@ -1306,7 +1228,6 @@ await prisma.$transaction(async (tx) => {
   await tx.action.deleteMany({ where: { userId } });
   await tx.userSetting.deleteMany({ where: { userId } });
   await tx.category.deleteMany({ where: { userId } });
-  await tx.authAccount.deleteMany({ where: { userId } });
   await tx.user.delete({ where: { id: userId } });
 });
 // 이후 Supabase Admin API로 auth.users 삭제
@@ -1363,7 +1284,7 @@ daily_action_summaries
 
 ## 18-5. 계정 연결
 
-현재 `auth_accounts` 구조는 사용자 한 명에게 여러 SNS 계정을 연결할 수 있으므로 추가 테이블 변경 없이 확장 가능하다.
+같은 이메일 계정은 Supabase가 자동으로 연결한다. 다른 이메일 계정 연결이 필요해지면 Supabase `linkIdentity`(수동 연결)를 사용하며, 앱 DB 변경은 필요 없다. (V1.1)
 
 ---
 
@@ -1445,7 +1366,7 @@ Action.userId === Category.userId
 
 | # | 항목 | 상태 |
 | --- | --- | --- |
-| 1 | 인증 라이브러리의 기본 User·Account 테이블을 그대로 쓸지 | 결정: Supabase Auth 사용, User.id = `auth.users.id`. AuthAccount 유지 여부는 인증 단계에서 결정 |
+| 1 | 인증 라이브러리의 기본 User·Account 테이블을 그대로 쓸지 | 결정: Supabase Auth 사용, User.id = `auth.users.id`. AuthAccount 삭제 (결정 기록 16) |
 | 2 | 아이콘 값을 이모지 문자열로 저장할지, 아이콘 코드로 저장할지 | 미정 |
 | 3 | `sort_order` 생성 시 동시 요청을 어떻게 처리할지 | 결정: 별도 처리 안 함. 겹치면 `created_at` 오름차순 보조 정렬 (결정 기록 12) |
 | 4 | 카테고리 이동 시 행동 `sort_order`를 대상 카테고리 마지막으로 변경할지 | 미정 (7-9 권장안) |
@@ -1458,9 +1379,6 @@ Action.userId === Category.userId
 ```
 users
 - 앱 사용자 (id = Supabase Auth id)
-
-auth_accounts
-- Google·Apple 로그인 계정 (유지 여부 인증 단계에서 결정)
 
 categories
 - 행동 분류
