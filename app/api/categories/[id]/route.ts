@@ -28,6 +28,18 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 			return Response.json({ message: "back : category 수정 - category 없음" }, { status: 404 });
 		}
 
+		// 활성 카테고리는 최소 한 개 유지 (CAT-003)
+		if (isHidden === true && !existingCategory.isHidden) {
+			const activeCount = await prisma.category.count({ where: { userId, isHidden: false } });
+
+			if (activeCount <= 1) {
+				return Response.json(
+					{ message: "back : category 수정 - 마지막 활성 카테고리는 숨길 수 없음" },
+					{ status: 400 },
+				);
+			}
+		}
+
 		if (name !== undefined) {
 			if (typeof name !== "string") {
 				return Response.json({ message: "back : category 수정 - name 타입 오류" }, { status: 400 });
