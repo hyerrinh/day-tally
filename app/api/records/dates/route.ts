@@ -1,18 +1,6 @@
+import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-const userId = "550e8400-e29b-41d4-a716-446655440000";
-
-const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-
-// 형식이 맞고 실제로 존재하는 날짜면 Date, 아니면 null
-const parseDate = (value: string | null) => {
-	if (!value || !dateRegex.test(value)) {
-		return null;
-	}
-	const date = new Date(`${value}T00:00:00.000Z`);
-
-	return date.toISOString().slice(0, 10) === value ? date : null;
-};
+import { parseDate } from "@/lib/validation";
 
 // 기간 안에서 기록이 있는 날짜 목록 (CAL-001, decisions.md 21). 숨긴 행동·카테고리 기록도 포함
 export const GET = async (request: Request) => {

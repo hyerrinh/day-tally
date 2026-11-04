@@ -1,6 +1,6 @@
+import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-const userId = "550e8400-e29b-41d4-a716-446655440000";
+import { isDurationMinutes, isDurationStepMinutes, parseName } from "@/lib/validation";
 
 export const POST = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
 	try {
@@ -8,43 +8,33 @@ export const POST = async (request: Request, { params }: { params: Promise<{ id:
 		const { id } = await params;
 		const { name, defaultDurationMinutes, durationStepMinutes } = body;
 
-		if (typeof name !== "string") {
-			return Response.json({ message: "back : action 생성 - name 타입 오류" }, { status: 400 });
-		}
+		const parsedName = parseName(name);
 
-		if (defaultDurationMinutes !== undefined && defaultDurationMinutes !== null) {
-			if (!Number.isInteger(defaultDurationMinutes)) {
-				return Response.json(
-					{ message: "back : action 생성 - defaultDurationMinutes 정수 아님" },
-					{ status: 400 },
-				);
-			}
-			if (defaultDurationMinutes < 0 || defaultDurationMinutes > 1439) {
-				return Response.json(
-					{ message: "back : action 생성 - defaultDurationMinutes 0 미만 이거나 1439 초과" },
-					{ status: 400 },
-				);
-			}
-		}
-
-		if (
-			durationStepMinutes !== undefined &&
-			![1, 5, 10, 15, 30, 60].includes(durationStepMinutes)
-		) {
+		if ("error" in parsedName) {
 			return Response.json(
-				{ message: "back : action 생성 - durationStepMinutes 허용값 아님" },
+				{ message: `back : action 생성 - ${parsedName.error}` },
 				{ status: 400 },
 			);
 		}
 
-		const trimmedName = name.trim();
+		const { trimmedName, normalizedName } = parsedName;
 
-		if (trimmedName === "") {
-			return Response.json({ message: "back : action 생성 - name 빈 값" }, { status: 400 });
+		if (
+			defaultDurationMinutes !== undefined &&
+			defaultDurationMinutes !== null &&
+			!isDurationMinutes(defaultDurationMinutes)
+		) {
+			return Response.json(
+				{ message: "back : action 생성 - defaultDurationMinutes는 0~1439 정수" },
+				{ status: 400 },
+			);
 		}
 
-		if (trimmedName.length > 15) {
-			return Response.json({ message: "back : action 생성 - name 15자 초과" }, { status: 400 });
+		if (durationStepMinutes !== undefined && !isDurationStepMinutes(durationStepMinutes)) {
+			return Response.json(
+				{ message: "back : action 생성 - durationStepMinutes 허용값 아님" },
+				{ status: 400 },
+			);
 		}
 
 		const existingCategory = await prisma.category.findFirst({
@@ -57,8 +47,6 @@ export const POST = async (request: Request, { params }: { params: Promise<{ id:
 		if (!existingCategory) {
 			return Response.json({ message: "back : action 생성 - category 없음" }, { status: 404 });
 		}
-
-		const normalizedName = trimmedName.toLowerCase();
 
 		const duplicateAction = await prisma.action.findUnique({
 			where: {

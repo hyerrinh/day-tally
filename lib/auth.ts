@@ -1,5 +1,8 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
+// 토큰 검증으로 바꾸기 전까지 API가 쓰는 테스트 사용자 (ROADMAP 4단계에서 getUserId로 교체)
+export const testUserId = "550e8400-e29b-41d4-a716-446655440000";
+
 const supabaseUrl = process.env.SUPABASE_URL;
 
 // Supabase 공개키로 토큰 서명을 직접 검증한다 (decisions.md 13)

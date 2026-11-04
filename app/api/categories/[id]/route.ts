@@ -1,6 +1,6 @@
+import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-const userId = "550e8400-e29b-41d4-a716-446655440000";
+import { parseName } from "@/lib/validation";
 
 export const PATCH = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
 	try {
@@ -41,21 +41,16 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 		}
 
 		if (name !== undefined) {
-			if (typeof name !== "string") {
-				return Response.json({ message: "back : category 수정 - name 타입 오류" }, { status: 400 });
+			const parsedName = parseName(name);
+
+			if ("error" in parsedName) {
+				return Response.json(
+					{ message: `back : category 수정 - ${parsedName.error}` },
+					{ status: 400 },
+				);
 			}
 
-			trimmedName = name.trim();
-
-			if (trimmedName === "") {
-				return Response.json({ message: "back : category 수정 - name 빈 값" }, { status: 400 });
-			}
-
-			if (trimmedName.length > 15) {
-				return Response.json({ message: "back : category 수정 - name 15자 초과" }, { status: 400 });
-			}
-
-			normalizedName = trimmedName.toLowerCase();
+			({ trimmedName, normalizedName } = parsedName);
 
 			if (normalizedName === existingCategory.normalizedName) {
 				return Response.json(

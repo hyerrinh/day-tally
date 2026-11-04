@@ -1,6 +1,6 @@
+import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-const userId = "550e8400-e29b-41d4-a716-446655440000";
+import { parseName } from "@/lib/validation";
 
 export const GET = async () => {
 	try {
@@ -28,21 +28,16 @@ export const POST = async (request: Request) => {
 		const body = await request.json();
 		const { name, icon } = body;
 
-		if (typeof name !== "string") {
-			return Response.json({ message: "back : category 생성 - name 타입 오류" }, { status: 400 });
+		const parsedName = parseName(name);
+
+		if ("error" in parsedName) {
+			return Response.json(
+				{ message: `back : category 생성 - ${parsedName.error}` },
+				{ status: 400 },
+			);
 		}
 
-		const trimmedName = name.trim();
-
-		if (trimmedName === "") {
-			return Response.json({ message: "back : category 생성 - name 빈 값" }, { status: 400 });
-		}
-
-		if (trimmedName.length > 15) {
-			return Response.json({ message: "back : category 생성 - name 15자 초과" }, { status: 400 });
-		}
-
-		const normalizedName = trimmedName.toLowerCase();
+		const { trimmedName, normalizedName } = parsedName;
 
 		const duplicateCategory = await prisma.category.findUnique({
 			where: {

@@ -1,6 +1,6 @@
+import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-const userId = "550e8400-e29b-41d4-a716-446655440000";
+import { isDurationMinutes, isDurationStepMinutes, parseName } from "@/lib/validation";
 
 export const PATCH = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
 	try {
@@ -22,25 +22,18 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 			return Response.json({ message: "back : action 수정 - isHidden type 오류" }, { status: 400 });
 		}
 
-		if (defaultDurationMinutes !== undefined && defaultDurationMinutes !== null) {
-			if (!Number.isInteger(defaultDurationMinutes)) {
-				return Response.json(
-					{ message: "back : action 수정 - defaultDurationMinutes 정수 아님" },
-					{ status: 400 },
-				);
-			}
-			if (defaultDurationMinutes < 0 || defaultDurationMinutes > 1439) {
-				return Response.json(
-					{ message: "back : action 수정 - defaultDurationMinutes 0 미만 이거나 1439 초과" },
-					{ status: 400 },
-				);
-			}
+		if (
+			defaultDurationMinutes !== undefined &&
+			defaultDurationMinutes !== null &&
+			!isDurationMinutes(defaultDurationMinutes)
+		) {
+			return Response.json(
+				{ message: "back : action 수정 - defaultDurationMinutes는 0~1439 정수" },
+				{ status: 400 },
+			);
 		}
 
-		if (
-			durationStepMinutes !== undefined &&
-			![1, 5, 10, 15, 30, 60].includes(durationStepMinutes)
-		) {
+		if (durationStepMinutes !== undefined && !isDurationStepMinutes(durationStepMinutes)) {
 			return Response.json(
 				{ message: "back : action 수정 - durationStepMinutes 허용값 아님" },
 				{ status: 400 },
@@ -77,19 +70,17 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 		}
 
 		if (name !== undefined) {
-			if (typeof name !== "string") {
-				return Response.json({ message: "back : action 수정 - name 타입 오류" }, { status: 400 });
+			const parsedName = parseName(name);
+
+			if ("error" in parsedName) {
+				return Response.json(
+					{ message: `back : action 수정 - ${parsedName.error}` },
+					{ status: 400 },
+				);
 			}
 
-			trimmedName = name.trim();
-			if (trimmedName === "") {
-				return Response.json({ message: "back : action 수정 - name 빈 값" }, { status: 400 });
-			}
-			if (trimmedName.length > 15) {
-				return Response.json({ message: "back : action 수정 - name 15자 초과" }, { status: 400 });
-			}
+			({ trimmedName, normalizedName } = parsedName);
 
-			normalizedName = trimmedName.toLowerCase();
 			if (existingAction.normalizedName === normalizedName) {
 				return Response.json(
 					{ message: "back : action 수정 - 이전과 동일한 이름" },

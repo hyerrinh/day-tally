@@ -1,6 +1,5 @@
+import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-const userId = "550e8400-e29b-41d4-a716-446655440000";
 
 const recordSortOrders = ["NEWEST_FIRST", "OLDEST_FIRST"];
 

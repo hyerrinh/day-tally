@@ -1,21 +1,21 @@
+import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-
-const userId = "550e8400-e29b-41d4-a716-446655440000";
+import { isDurationMinutes, isFutureDate, parseDate } from "@/lib/validation";
 
 export async function GET(request: Request) {
 	try {
 		const { searchParams } = new URL(request.url);
 		const date = searchParams.get("date");
-		const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
 
 		if (!date) {
 			return Response.json({ message: "back - record 조회 : date 값 누락" }, { status: 400 });
 		}
-		if (!dateRegex.test(date)) {
+
+		const targetDate = parseDate(date);
+
+		if (!targetDate) {
 			return Response.json({ message: "back - record 조회 : date 형식 오류" }, { status: 400 });
 		}
-
-		const targetDate = new Date(`${date}T00:00:00.000Z`);
 
 		const userSetting = await prisma.userSetting.findUnique({ where: { userId } });
 		const sortOrder = userSetting?.recordSortOrder === "OLDEST_FIRST" ? "asc" : "desc";
@@ -101,38 +101,16 @@ export async function POST(request: Request) {
 			검증을 통과한 후 Prisma에 넣을 Date 객체 생성
 		*/
 
-		if (typeof recordDate !== "string") {
+		const targetDate = parseDate(recordDate);
+
+		if (!targetDate) {
 			return Response.json(
-				{ message: "back - record 생성 - recordDate 없음 or 타입 오류" },
+				{ message: "back - record 생성 - recordDate 없음 또는 형식 오류" },
 				{ status: 400 },
 			);
 		}
 
-		const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-
-		if (!dateRegex.test(recordDate)) {
-			return Response.json(
-				{ message: "back - record 생성 - recordDate 형식 오류" },
-				{ status: 400 },
-			);
-		}
-
-		const targetDate = new Date(`${recordDate}T00:00:00.000Z`);
-
-		if (
-			Number.isNaN(targetDate.getTime()) ||
-			targetDate.toISOString().slice(0, 10) !== recordDate
-		) {
-			return Response.json(
-				{ message: "back - record 생성 - 실제로 존재하지 않는 날짜" },
-				{ status: 400 },
-			);
-		}
-
-		// 가장 빠른 시간대(UTC+14)의 오늘보다 뒤면 미래 날짜 (decisions.md 11)
-		const latestToday = new Date(Date.now() + 14 * 60 * 60 * 1000).toISOString().slice(0, 10);
-
-		if (recordDate > latestToday) {
+		if (isFutureDate(targetDate)) {
 			return Response.json({ message: "back - record 생성 - 미래 날짜" }, { status: 400 });
 		}
 
@@ -145,28 +123,11 @@ export async function POST(request: Request) {
 			0은 시간 없음으로 보고 저장하지 않음 (COMMON-006)
 		*/
 
-		if (durationMinutes !== undefined) {
-			if (typeof durationMinutes !== "number") {
-				return Response.json(
-					{ message: "back - record 생성 : durationMinutes type number 아님" },
-					{ status: 400 },
-				);
-			}
-
-			if (!Number.isInteger(durationMinutes)) {
-				return Response.json(
-					{ message: "back - record 생성 : durationMinutes 정수 아님" },
-					{ status: 400 },
-				);
-			}
-			if (durationMinutes < 0 || durationMinutes > 1439) {
-				return Response.json(
-					{
-						message: "back - record 생성 : durationMinutes 0 미만 이거나 1439 초과",
-					},
-					{ status: 400 },
-				);
-			}
+		if (durationMinutes !== undefined && !isDurationMinutes(durationMinutes)) {
+			return Response.json(
+				{ message: "back - record 생성 : durationMinutes는 0~1439 정수" },
+				{ status: 400 },
+			);
 		}
 
 		/*
