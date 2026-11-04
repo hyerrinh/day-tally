@@ -15,7 +15,7 @@
 ## 2단계: 로컬 Postgres → Supabase 이전
 
 - [ ] 로컬 Postgres → Supabase 이전
-- [ ] 웹이 그대로 동작하는지 확인
+- [ ] 웹이 그대로 동작하는지 확인 (`bash scripts/api-regress.sh`)
 
 ## 3단계: API 다듬기
 
