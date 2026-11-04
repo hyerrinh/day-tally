@@ -97,3 +97,35 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 		return Response.json({ message: "back : action 수정 - 서버 오류" }, { status: 500 });
 	}
 };
+
+// 기록이 없는 행동만 삭제 (ACT-008, decisions.md 18)
+export const DELETE = async (_request: Request, { params }: { params: Promise<{ id: string }> }) => {
+	try {
+		const { id } = await params;
+
+		const existingAction = await prisma.action.findFirst({ where: { id, userId } });
+
+		if (!existingAction) {
+			return Response.json({ message: "back : action 삭제 - action 없음" }, { status: 404 });
+		}
+
+		const recordCount = await prisma.record.count({ where: { actionId: id } });
+
+		if (recordCount > 0) {
+			return Response.json(
+				{ message: "back : action 삭제 - 기록이 있는 action은 삭제 불가 (숨김 사용)" },
+				{ status: 409 },
+			);
+		}
+
+		const action = await prisma.action.delete({ where: { id } });
+
+		return Response.json(action);
+	} catch (e) {
+		if (e instanceof Error) {
+			return Response.json({ message: `back : action 삭제 - ${e.message}` }, { status: 500 });
+		}
+
+		return Response.json({ message: "back : action 삭제 - 서버 오류" }, { status: 500 });
+	}
+};
