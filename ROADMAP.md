@@ -31,7 +31,7 @@
 - [x] 행동 카테고리 이동 — 대상 카테고리 맨 뒤 (ACT-003, 결정 20)
 - [x] 숨긴 카테고리·행동 조회 — `GET /api/hidden` (HIDDEN-001, HIDDEN-002, 결정 21)
 - [x] 기록 정렬 설정 조회·변경 — `GET·PATCH /api/me/settings` (SET-001, 결정 21)
-- [ ] 월별 기록 있는 날짜 조회 (CAL-001)
+- [x] 기록 있는 날짜 조회 — `GET /api/records/dates?from=&to=` (CAL-001, 결정 21)
 - [x] 기록 없는 행동·카테고리 삭제 (ACT-008, CAT-005, 결정 18)
 
 ## 4단계: 인증 헬퍼
