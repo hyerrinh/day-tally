@@ -1368,7 +1368,7 @@ REC-001의 날짜·시간·메모 Validation을 동일하게 적용한다.
 
 # 12. 기능별 API 연결 초안
 
-> 실제 URL, 응답 코드 및 상세 Request·Response는 별도 API 명세서에서 확정한다.
+> 실제 URL, 응답 코드 및 상세 Request·Response는 별도 API 명세서(`docs/api-spec.md`)에서 확정한다.
 
 | 기능 ID | 예상 기능 |
 | --- | --- |
