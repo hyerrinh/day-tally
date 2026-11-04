@@ -38,8 +38,9 @@
 
 ## 5단계: Expo 앱 뼈대
 
-- [ ] 레포 구조 결정
-- [ ] Expo 뼈대
+- [x] 레포 구조 결정 — pnpm workspace 모노레포 (결정 17)
+- [ ] 현재 Next를 `apps/web`으로 이동 + workspace 설정 (Supabase 이전 후)
+- [ ] Expo 뼈대 (`apps/mobile`)
 - [ ] Supabase 구글 로그인 (AUTH-001)
 - [ ] 토큰 붙이는 fetch 래퍼
 
@@ -68,6 +69,6 @@
 
 ## 미정
 
-- [ ] 레포 구조 (5단계 전)
+- [x] 레포 구조 (5단계 전) — 모노레포
 - [x] AuthAccount 유지 여부 (4단계) — 삭제
 - [ ] 아이콘 저장 방식 (이모지 문자열 / 아이콘 코드)
