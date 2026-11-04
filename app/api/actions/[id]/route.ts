@@ -4,10 +4,19 @@ const userId = "550e8400-e29b-41d4-a716-446655440000";
 
 export const PATCH = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
 	try {
-		const { name, isHidden, defaultDurationMinutes, durationStepMinutes } = await request.json();
+		const { name, isHidden, defaultDurationMinutes, durationStepMinutes, categoryId } =
+			await request.json();
 		const { id } = await params;
 		let trimmedName: string | undefined;
 		let normalizedName: string | undefined;
+		let movedSortOrder: number | undefined;
+
+		if (categoryId !== undefined && typeof categoryId !== "string") {
+			return Response.json(
+				{ message: "back : action 수정 - categoryId 타입 오류" },
+				{ status: 400 },
+			);
+		}
 
 		if (isHidden !== undefined && typeof isHidden !== "boolean") {
 			return Response.json({ message: "back : action 수정 - isHidden type 오류" }, { status: 400 });
@@ -43,7 +52,29 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 			return Response.json({ message: "back : action 수정 - action 없음" }, { status: 404 });
 		}
 
-		const categoryId = existingAction.categoryId;
+		const targetCategoryId = categoryId ?? existingAction.categoryId;
+		const isMoving = targetCategoryId !== existingAction.categoryId;
+
+		// 숨긴 카테고리로 이동 불가 (ACT-003)
+		if (isMoving) {
+			const targetCategory = await prisma.category.findFirst({
+				where: { userId, id: targetCategoryId },
+			});
+
+			if (!targetCategory) {
+				return Response.json(
+					{ message: "back : action 수정 - 이동할 category 없음" },
+					{ status: 404 },
+				);
+			}
+
+			if (targetCategory.isHidden) {
+				return Response.json(
+					{ message: "back : action 수정 - 숨긴 category로 이동 불가" },
+					{ status: 400 },
+				);
+			}
+		}
 
 		if (name !== undefined) {
 			if (typeof name !== "string") {
@@ -65,14 +96,31 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 					{ status: 400 },
 				);
 			}
+		}
 
+		// 이동할 카테고리(또는 현재 카테고리)에 같은 이름이 있으면 불가
+		if (name !== undefined || isMoving) {
 			const duplicateAction = await prisma.action.findFirst({
-				where: { userId, categoryId, normalizedName, id: { not: id } },
+				where: {
+					userId,
+					categoryId: targetCategoryId,
+					normalizedName: normalizedName ?? existingAction.normalizedName,
+					id: { not: id },
+				},
 			});
 
 			if (duplicateAction) {
 				return Response.json({ message: "back : action 수정 - 이름 중복" }, { status: 409 });
 			}
+		}
+
+		// 이동하면 대상 카테고리의 맨 뒤로 (decisions.md 20)
+		if (isMoving) {
+			const { _max } = await prisma.action.aggregate({
+				where: { categoryId: targetCategoryId },
+				_max: { sortOrder: true },
+			});
+			movedSortOrder = (_max.sortOrder ?? 0) + 1;
 		}
 
 		const updatedAction = await prisma.action.update({
@@ -85,6 +133,7 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 					defaultDurationMinutes: defaultDurationMinutes || null,
 				}),
 				...(durationStepMinutes !== undefined && { durationStepMinutes }),
+				...(isMoving && { categoryId: targetCategoryId, sortOrder: movedSortOrder }),
 			},
 		});
 

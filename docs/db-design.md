@@ -1373,7 +1373,7 @@ Action.userId === Category.userId
 | 1 | 인증 라이브러리의 기본 User·Account 테이블을 그대로 쓸지 | 결정: Supabase Auth 사용, User.id = `auth.users.id`. AuthAccount 삭제 (결정 기록 16) |
 | 2 | 아이콘 값을 이모지 문자열로 저장할지, 아이콘 코드로 저장할지 | 미정 |
 | 3 | `sort_order` 생성 시 동시 요청을 어떻게 처리할지 | 결정: 별도 처리 안 함. 겹치면 `created_at` 오름차순 보조 정렬 (결정 기록 12) |
-| 4 | 카테고리 이동 시 행동 `sort_order`를 대상 카테고리 마지막으로 변경할지 | 미정 (7-9 권장안) |
+| 4 | 카테고리 이동 시 행동 `sort_order`를 대상 카테고리 마지막으로 변경할지 | 결정: 대상 카테고리 max(sort_order) + 1 (7-9 권장안, 결정 기록 20) |
 | 5 | Prisma 마이그레이션에 Check Constraint를 수동 추가할지 | 결정: 수동 추가 (15장) |
 
 ---
