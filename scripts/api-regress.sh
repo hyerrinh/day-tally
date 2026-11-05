@@ -80,6 +80,8 @@ t 404 "숨긴 행동 기록" -X POST $B/records -d "{\"actionId\":\"$a\",\"recor
 t 200 "숨긴 항목" "$B/hidden"; has 'zzr-a2' "숨긴 행동 목록"
 t 200 "설정 조회" "$B/me/settings"
 t 400 "설정 허용값" -X PATCH $B/me/settings -d '{"recordSortOrder":"x"}'
+t 400 "설정 빈 요청" -X PATCH $B/me/settings -d '{}'
+t 400 "시간대 허용값" -X PATCH $B/me/settings -d '{"timezone":"Mars/Base"}'
 t 409 "기록 있는 행동 삭제" -X DELETE $B/actions/$a
 t 409 "기록 있는 카테고리 삭제" -X DELETE $B/categories/$cA
 t 200 "기록 삭제" -X DELETE $B/records/$r

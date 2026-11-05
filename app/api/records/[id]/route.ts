@@ -20,7 +20,9 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 				);
 			}
 
-			if (isFutureDate(parsedDate)) {
+			const userSetting = await prisma.userSetting.findUnique({ where: { userId } });
+
+			if (isFutureDate(parsedDate, userSetting?.timezone)) {
 				return Response.json({ message: "back : record 수정 - 미래 날짜" }, { status: 400 });
 			}
 

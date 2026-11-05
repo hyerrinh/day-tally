@@ -33,7 +33,7 @@
 | 시간 (`durationMinutes`, `defaultDurationMinutes`) | 정수 0~1439. `0`과 `null`은 "시간 없음"으로 `null` 저장 (COMMON-006) |
 | ± 단위 (`durationStepMinutes`) | 1, 5, 10, 15, 30, 60 중 하나 |
 | 메모 | 문자열, 앞뒤 공백 제거 후 최대 500자. 빈 문자열은 `null` |
-| 미래 날짜 | UTC+14 기준 오늘보다 뒤면 거부 (결정 11, 4단계에서 사용자 시간대 기준으로 변경) |
+| 미래 날짜 | 설정에 저장된 사용자 시간대의 오늘보다 뒤면 거부. 시간대가 없으면 UTC+14 기준 (결정 11, 22) |
 
 ## 1-4. 상태 코드
 
@@ -70,14 +70,16 @@
 
 ## PATCH /api/me/settings
 
-기록 정렬을 바꾼다. 설정이 없으면 만든다. (SET-001)
+기록 정렬이나 시간대를 바꾼다. 설정이 없으면 만든다. (SET-001, 결정 22)
 
 | 필드 | 타입 | 필수 | 설명 |
 | --- | --- | --- | --- |
-| `recordSortOrder` | `"NEWEST_FIRST"` \| `"OLDEST_FIRST"` | O | 기록 정렬 |
+| `recordSortOrder` | `"NEWEST_FIRST"` \| `"OLDEST_FIRST"` | X | 기록 정렬 |
+| `timezone` | string | X | 기기 IANA 시간대 (예: `Asia/Seoul`). 앱 실행 시 보낸다. 미래 날짜 판단에 사용 |
 
+- 둘 중 하나는 있어야 한다.
 - 응답 `200`: UserSetting
-- 오류: `400` 허용값 아님
+- 오류: `400` 변경할 값 없음·허용값 아님
 
 ---
 

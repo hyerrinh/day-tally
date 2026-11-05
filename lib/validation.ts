@@ -17,11 +17,26 @@ export const parseDate = (value: unknown): Date | null => {
 	return date;
 };
 
-// 가장 빠른 시간대(UTC+14)의 오늘보다 뒤면 미래 날짜 (decisions.md 11)
-export const isFutureDate = (date: Date): boolean => {
-	const latestToday = new Date(Date.now() + 14 * 60 * 60 * 1000).toISOString().slice(0, 10);
+// 사용자 시간대의 오늘보다 뒤면 미래 날짜. 시간대가 없으면 가장 빠른 시간대(UTC+14) 기준 (decisions.md 11, 22)
+export const isFutureDate = (date: Date, timezone?: string | null): boolean => {
+	const today = timezone
+		? new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date())
+		: new Date(Date.now() + 14 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-	return date.toISOString().slice(0, 10) > latestToday;
+	return date.toISOString().slice(0, 10) > today;
+};
+
+// IANA 시간대 이름 (예: Asia/Seoul)
+export const isTimezone = (value: unknown): value is string => {
+	if (typeof value !== "string" || value.length > 100) {
+		return false;
+	}
+	try {
+		new Intl.DateTimeFormat("en-CA", { timeZone: value });
+		return true;
+	} catch {
+		return false;
+	}
 };
 
 // 시간은 0~1439 정수. 0은 시간 없음 (COMMON-006)

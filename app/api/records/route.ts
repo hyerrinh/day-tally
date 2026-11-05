@@ -110,7 +110,9 @@ export async function POST(request: Request) {
 			);
 		}
 
-		if (isFutureDate(targetDate)) {
+		const userSetting = await prisma.userSetting.findUnique({ where: { userId } });
+
+		if (isFutureDate(targetDate, userSetting?.timezone)) {
 			return Response.json({ message: "back - record 생성 - 미래 날짜" }, { status: 400 });
 		}
 

@@ -1,5 +1,6 @@
 import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isTimezone } from "@/lib/validation";
 
 const recordSortOrders = ["NEWEST_FIRST", "OLDEST_FIRST"];
 
@@ -19,22 +20,41 @@ export const GET = async () => {
 	}
 };
 
-// 기록 정렬 설정 변경 (SET-001)
+// 기록 정렬(SET-001)·시간대(decisions.md 22) 변경
 export const PATCH = async (request: Request) => {
 	try {
-		const { recordSortOrder } = await request.json();
+		const { recordSortOrder, timezone } = await request.json();
 
-		if (!recordSortOrders.includes(recordSortOrder)) {
+		if (recordSortOrder === undefined && timezone === undefined) {
+			return Response.json(
+				{ message: "back : 설정 수정 - 변경할 값 없음" },
+				{ status: 400 },
+			);
+		}
+
+		if (recordSortOrder !== undefined && !recordSortOrders.includes(recordSortOrder)) {
 			return Response.json(
 				{ message: "back : 설정 수정 - recordSortOrder 허용값 아님" },
 				{ status: 400 },
 			);
 		}
 
+		if (timezone !== undefined && !isTimezone(timezone)) {
+			return Response.json(
+				{ message: "back : 설정 수정 - timezone 허용값 아님" },
+				{ status: 400 },
+			);
+		}
+
+		const data = {
+			...(recordSortOrder !== undefined && { recordSortOrder }),
+			...(timezone !== undefined && { timezone }),
+		};
+
 		const setting = await prisma.userSetting.upsert({
 			where: { userId },
-			update: { recordSortOrder },
-			create: { userId, recordSortOrder },
+			update: data,
+			create: { userId, ...data },
 		});
 
 		return Response.json(setting);
