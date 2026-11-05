@@ -22,7 +22,13 @@ t 400 "이름 16자" -X POST $B/categories -d '{"name":"zzr4567890123456"}'
 t 400 "이름 타입" -X POST $B/categories -d '{"name":5}'
 t 409 "이름 중복(대소문자)" -X POST $B/categories -d '{"name":"ZZRA"}'
 t 200 "카테고리 이름 변경" -X PATCH $B/categories/$cB -d '{"name":"zzrB2"}'
-t 400 "같은 이름으로 변경" -X PATCH $B/categories/$cB -d '{"name":"ZZRB2"}'
+t 200 "같은 이름 다시 보내기" -X PATCH $B/categories/$cB -d '{"name":"zzrB2","isHidden":false}'
+t 200 "대소문자만 변경" -X PATCH $B/categories/$cB -d '{"name":"ZZRB2"}'; has '"name":"ZZRB2"' "대소문자 반영"
+t 400 "icon 타입" -X POST $B/categories -d '{"name":"zzrI","icon":5}'
+t 400 "icon 101자" -X POST $B/categories -d "{\"name\":\"zzrI\",\"icon\":\"$(printf 'i%.0s' $(seq 101))\"}"
+t 404 "UUID 아닌 카테고리 수정" -X PATCH $B/categories/abc -d '{"name":"x"}'
+t 404 "UUID 아닌 카테고리 삭제" -X DELETE $B/categories/abc
+t 404 "UUID 아닌 카테고리에 행동" -X POST $B/categories/abc/actions -d '{"name":"x"}'
 t 400 "변경 이름 빈 값" -X PATCH $B/categories/$cB -d '{"name":""}'
 t 409 "변경 이름 중복" -X PATCH $B/categories/$cB -d '{"name":"zzrA"}'
 t 400 "isHidden 타입" -X PATCH $B/categories/$cB -d '{"isHidden":"y"}'
@@ -40,7 +46,10 @@ t 400 "행동 이름 타입" -X POST $B/categories/$cA/actions -d '{}'
 t 409 "행동 이름 중복" -X POST $B/categories/$cA/actions -d '{"name":"ZZR-A"}'
 t 404 "없는 카테고리에 행동" -X POST $B/categories/00000000-0000-4000-8000-000000000000/actions -d '{"name":"x"}'
 t 200 "행동 이름 변경" -X PATCH $B/actions/$a -d '{"name":"zzr-a2"}'
-t 400 "행동 같은 이름" -X PATCH $B/actions/$a -d '{"name":"zzr-a2"}'
+t 200 "행동 같은 이름 + 다른 필드" -X PATCH $B/actions/$a -d '{"name":"zzr-a2","durationStepMinutes":15}'; has '"durationStepMinutes":15' "다른 필드 반영"
+t 404 "UUID 아닌 행동 수정" -X PATCH $B/actions/abc -d '{"name":"x"}'
+t 404 "UUID 아닌 행동 삭제" -X DELETE $B/actions/abc
+t 404 "UUID 아닌 카테고리로 이동" -X PATCH $B/actions/$a -d '{"categoryId":"abc"}'
 t 400 "행동 이름 16자" -X PATCH $B/actions/$a -d '{"name":"zzr4567890123456"}'
 t 200 "기본 시간 0으로" -X PATCH $B/actions/$a -d '{"defaultDurationMinutes":0}'; has '"defaultDurationMinutes":null' "수정 0분은 null"
 t 400 "수정 기본 시간 -1" -X PATCH $B/actions/$a -d '{"defaultDurationMinutes":-1}'
@@ -63,6 +72,7 @@ t 400 "기록 날짜 없음" -X POST $B/records -d "{\"actionId\":\"$a\"}"
 t 400 "메모 501자" -X POST $B/records -d "{\"actionId\":\"$a\",\"recordDate\":\"2026-11-04\",\"memo\":\"$(printf 'x%.0s' $(seq 501))\"}"
 t 400 "actionId 타입" -X POST $B/records -d '{"actionId":1,"recordDate":"2026-11-04"}'
 t 404 "없는 행동" -X POST $B/records -d '{"actionId":"00000000-0000-4000-8000-000000000000","recordDate":"2026-11-04"}'
+t 404 "UUID 아닌 actionId" -X POST $B/records -d '{"actionId":"abc","recordDate":"2026-11-04"}'
 t 200 "기록 수정" -X PATCH $B/records/$r -d '{"recordDate":"2026-11-02","durationMinutes":null,"memo":""}'; has '"durationMinutes":null' "시간 null"; has '"memo":null' "빈 메모 null"
 t 400 "수정 미래" -X PATCH $B/records/$r -d '{"recordDate":"2030-01-01"}'
 t 400 "수정 없는 날짜" -X PATCH $B/records/$r -d '{"recordDate":"2026-13-01"}'
@@ -87,6 +97,8 @@ t 409 "기록 있는 카테고리 삭제" -X DELETE $B/categories/$cA
 t 200 "기록 삭제" -X DELETE $B/records/$r
 t 200 "기록 삭제2" -X DELETE $B/records/$r2
 t 404 "없는 기록 삭제" -X DELETE $B/records/$r
+t 404 "UUID 아닌 기록 수정" -X PATCH $B/records/abc -d '{"memo":"x"}'
+t 404 "UUID 아닌 기록 삭제" -X DELETE $B/records/abc
 AUTH_SAVED=("${AUTH[@]}"); AUTH=(); t 401 "init 토큰 없음" -X POST $B/me/init; AUTH=("${AUTH_SAVED[@]}")
 t 200 "카테고리 A 삭제" -X DELETE $B/categories/$cA
 t 200 "카테고리 B 삭제" -X DELETE $B/categories/$cB

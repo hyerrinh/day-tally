@@ -1,6 +1,6 @@
 import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { parseName } from "@/lib/validation";
+import { isUuid, parseName } from "@/lib/validation";
 
 export const PATCH = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
 	try {
@@ -17,12 +17,9 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 			);
 		}
 
-		const existingCategory = await prisma.category.findFirst({
-			where: {
-				userId,
-				id,
-			},
-		});
+		const existingCategory = isUuid(id)
+			? await prisma.category.findFirst({ where: { userId, id } })
+			: null;
 
 		if (!existingCategory) {
 			return Response.json({ message: "back : category 수정 - category 없음" }, { status: 404 });
@@ -51,13 +48,6 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 			}
 
 			({ trimmedName, normalizedName } = parsedName);
-
-			if (normalizedName === existingCategory.normalizedName) {
-				return Response.json(
-					{ message: "back : category 수정 - 이전과 동일한 이름" },
-					{ status: 400 },
-				);
-			}
 
 			const duplicateCategory = await prisma.category.findFirst({
 				where: {
@@ -97,7 +87,9 @@ export const DELETE = async (_request: Request, { params }: { params: Promise<{ 
 	try {
 		const { id } = await params;
 
-		const existingCategory = await prisma.category.findFirst({ where: { userId, id } });
+		const existingCategory = isUuid(id)
+			? await prisma.category.findFirst({ where: { userId, id } })
+			: null;
 
 		if (!existingCategory) {
 			return Response.json({ message: "back : category 삭제 - category 없음" }, { status: 404 });

@@ -1,6 +1,6 @@
 import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isDurationMinutes, isDurationStepMinutes, parseName } from "@/lib/validation";
+import { isDurationMinutes, isDurationStepMinutes, isUuid, parseName } from "@/lib/validation";
 
 export const POST = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
 	try {
@@ -37,12 +37,9 @@ export const POST = async (request: Request, { params }: { params: Promise<{ id:
 			);
 		}
 
-		const existingCategory = await prisma.category.findFirst({
-			where: {
-				userId,
-				id,
-			},
-		});
+		const existingCategory = isUuid(id)
+			? await prisma.category.findFirst({ where: { userId, id } })
+			: null;
 
 		if (!existingCategory) {
 			return Response.json({ message: "back : action 생성 - category 없음" }, { status: 404 });

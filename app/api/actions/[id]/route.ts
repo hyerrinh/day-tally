@@ -1,6 +1,6 @@
 import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isDurationMinutes, isDurationStepMinutes, parseName } from "@/lib/validation";
+import { isDurationMinutes, isDurationStepMinutes, isUuid, parseName } from "@/lib/validation";
 
 export const PATCH = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
 	try {
@@ -39,7 +39,10 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 				{ status: 400 },
 			);
 		}
-		const existingAction = await prisma.action.findFirst({ where: { id, userId } });
+
+		const existingAction = isUuid(id)
+			? await prisma.action.findFirst({ where: { id, userId } })
+			: null;
 
 		if (!existingAction) {
 			return Response.json({ message: "back : action 수정 - action 없음" }, { status: 404 });
@@ -50,9 +53,9 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 
 		// 숨긴 카테고리로 이동 불가 (ACT-003)
 		if (isMoving) {
-			const targetCategory = await prisma.category.findFirst({
-				where: { userId, id: targetCategoryId },
-			});
+			const targetCategory = isUuid(targetCategoryId)
+				? await prisma.category.findFirst({ where: { userId, id: targetCategoryId } })
+				: null;
 
 			if (!targetCategory) {
 				return Response.json(
@@ -80,13 +83,6 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 			}
 
 			({ trimmedName, normalizedName } = parsedName);
-
-			if (existingAction.normalizedName === normalizedName) {
-				return Response.json(
-					{ message: "back : action 수정 - 이전과 동일한 이름" },
-					{ status: 400 },
-				);
-			}
 		}
 
 		// 이동할 카테고리(또는 현재 카테고리)에 같은 이름이 있으면 불가
@@ -143,7 +139,9 @@ export const DELETE = async (_request: Request, { params }: { params: Promise<{ 
 	try {
 		const { id } = await params;
 
-		const existingAction = await prisma.action.findFirst({ where: { id, userId } });
+		const existingAction = isUuid(id)
+			? await prisma.action.findFirst({ where: { id, userId } })
+			: null;
 
 		if (!existingAction) {
 			return Response.json({ message: "back : action 삭제 - action 없음" }, { status: 404 });

@@ -1,6 +1,6 @@
 import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isDurationMinutes, isFutureDate, parseDate } from "@/lib/validation";
+import { isDurationMinutes, isFutureDate, isUuid, parseDate, parseMemo } from "@/lib/validation";
 
 export const PATCH = async (request: Request, { params }: { params: Promise<{ id: string }> }) => {
 	try {
@@ -8,7 +8,7 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 		const { recordDate, durationMinutes, memo } = await request.json();
 		const { id } = await params;
 		let targetDate: Date | undefined;
-		let trimmedMemo: string | null | undefined;
+		let parsedMemo: string | null = null;
 
 		if (recordDate !== undefined) {
 			const parsedDate = parseDate(recordDate);
@@ -41,21 +41,18 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 		}
 
 		if (memo !== undefined && memo !== null) {
-			if (typeof memo !== "string") {
-				return Response.json(
-					{ message: "back : record 수정 - 메모 type string 아님" },
-					{ status: 400 },
-				);
+			const result = parseMemo(memo);
+
+			if ("error" in result) {
+				return Response.json({ message: `back : record 수정 - ${result.error}` }, { status: 400 });
 			}
 
-			trimmedMemo = memo.trim();
-
-			if (trimmedMemo.length > 500) {
-				return Response.json({ message: "back : record 수정 - 메모 500자 초과" }, { status: 400 });
-			}
+			parsedMemo = result.memo;
 		}
 
-		const existingRecord = await prisma.record.findFirst({ where: { id, userId } });
+		const existingRecord = isUuid(id)
+			? await prisma.record.findFirst({ where: { id, userId } })
+			: null;
 
 		if (!existingRecord) {
 			return Response.json({ message: "back : record 수정 - record 없음" }, { status: 404 });
@@ -67,7 +64,7 @@ export const PATCH = async (request: Request, { params }: { params: Promise<{ id
 				...(targetDate && { recordDate: targetDate }),
 				// 0은 시간 없음, 빈 메모는 null (COMMON-006, REC-001)
 				...(durationMinutes !== undefined && { durationMinutes: durationMinutes || null }),
-				...(memo !== undefined && { memo: trimmedMemo || null }),
+				...(memo !== undefined && { memo: parsedMemo }),
 			},
 		});
 
@@ -85,15 +82,25 @@ export const DELETE = async (
 	_request: Request,
 	{ params }: { params: Promise<{ id: string }> },
 ) => {
-	const { id } = await params;
+	try {
+		const { id } = await params;
 
-	const existingRecord = await prisma.record.findFirst({ where: { id, userId } });
+		const existingRecord = isUuid(id)
+			? await prisma.record.findFirst({ where: { id, userId } })
+			: null;
 
-	if (!existingRecord) {
-		return Response.json({ message: "back : record 삭제 - record 없음" }, { status: 404 });
+		if (!existingRecord) {
+			return Response.json({ message: "back : record 삭제 - record 없음" }, { status: 404 });
+		}
+
+		const record = await prisma.record.delete({ where: { userId, id } });
+
+		return Response.json(record);
+	} catch (e) {
+		if (e instanceof Error) {
+			return Response.json({ message: `back : record 삭제 - ${e.message}` }, { status: 500 });
+		}
+
+		return Response.json({ message: "back : record 삭제 - 서버 오류" }, { status: 500 });
 	}
-
-	const record = await prisma.record.delete({ where: { userId, id } });
-
-	return Response.json(record);
 };

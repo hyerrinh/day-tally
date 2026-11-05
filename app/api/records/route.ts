@@ -1,6 +1,6 @@
 import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isDurationMinutes, isFutureDate, parseDate } from "@/lib/validation";
+import { isDurationMinutes, isFutureDate, isUuid, parseDate, parseMemo } from "@/lib/validation";
 
 export async function GET(request: Request) {
 	try {
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 	try {
 		const body = await request.json();
 		const { actionId, recordDate, durationMinutes, memo } = body;
-		let trimmedMemo: string | undefined;
+		let parsedMemo: string | null = null;
 
 		/* 
 			1. actionId
@@ -81,17 +81,6 @@ export async function POST(request: Request) {
 			return Response.json({ message: "back - record 생성 : 액션ID 빈 문자열" }, { status: 400 });
 		}
 
-		const existingAction = await prisma.action.findFirst({
-			where: { userId, id: trimmedActionId, isHidden: false, category: { isHidden: false } },
-		});
-
-		if (!existingAction) {
-			return Response.json(
-				{ message: "back - record 생성 - 숨기지 않은 action 또는 category 없음" },
-				{ status: 404 },
-			);
-		}
-
 		/* 
 			2. recordDate
 			반드시 존재해야 함
@@ -110,7 +99,22 @@ export async function POST(request: Request) {
 			);
 		}
 
-		const userSetting = await prisma.userSetting.findUnique({ where: { userId } });
+		// 행동 조회와 시간대 조회는 서로 독립이라 함께 실행
+		const [existingAction, userSetting] = await Promise.all([
+			isUuid(trimmedActionId)
+				? prisma.action.findFirst({
+						where: { userId, id: trimmedActionId, isHidden: false, category: { isHidden: false } },
+					})
+				: null,
+			prisma.userSetting.findUnique({ where: { userId } }),
+		]);
+
+		if (!existingAction) {
+			return Response.json(
+				{ message: "back - record 생성 - 숨기지 않은 action 또는 category 없음" },
+				{ status: 404 },
+			);
+		}
 
 		if (isFutureDate(targetDate, userSetting?.timezone)) {
 			return Response.json({ message: "back - record 생성 - 미래 날짜" }, { status: 400 });
@@ -142,17 +146,13 @@ export async function POST(request: Request) {
 		*/
 
 		if (memo !== undefined) {
-			if (typeof memo !== "string") {
-				return Response.json(
-					{ message: "back - record 생성 : 메모 type string 아님" },
-					{ status: 400 },
-				);
-			}
-			trimmedMemo = memo.trim();
+			const result = parseMemo(memo);
 
-			if (trimmedMemo.length > 500) {
-				return Response.json({ message: "back - record 생성 : 메모 500자 초과" }, { status: 400 });
+			if ("error" in result) {
+				return Response.json({ message: `back - record 생성 : ${result.error}` }, { status: 400 });
 			}
+
+			parsedMemo = result.memo;
 		}
 
 		const record = await prisma.record.create({
@@ -161,7 +161,7 @@ export async function POST(request: Request) {
 				recordDate: targetDate,
 				actionId: trimmedActionId,
 				...(durationMinutes !== undefined && durationMinutes !== 0 && { durationMinutes }),
-				...(trimmedMemo && { memo: trimmedMemo }),
+				...(parsedMemo && { memo: parsedMemo }),
 			},
 		});
 

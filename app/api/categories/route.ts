@@ -1,6 +1,6 @@
 import { testUserId as userId } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { parseName } from "@/lib/validation";
+import { isIcon, parseName } from "@/lib/validation";
 
 export const GET = async () => {
 	try {
@@ -38,6 +38,13 @@ export const POST = async (request: Request) => {
 		}
 
 		const { trimmedName, normalizedName } = parsedName;
+
+		if (icon !== undefined && !isIcon(icon)) {
+			return Response.json(
+				{ message: "back : category 생성 - icon은 1~100자 문자열" },
+				{ status: 400 },
+			);
+		}
 
 		const duplicateCategory = await prisma.category.findUnique({
 			where: {
