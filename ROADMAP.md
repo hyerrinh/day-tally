@@ -3,6 +3,21 @@
 > 기능 기준: `docs/feature-spec.md` · DB 기준: `docs/db-design.md` · 결정 기록: `docs/decisions.md`
 > 괄호 안은 기능명세서 ID다.
 
+## 개인 PC에서 할 일 (회사 PC는 Supabase 연결 불가)
+
+> 회사 네트워크가 Supabase의 Postgres 연결과 TLS(JWKS 공개키 요청)를 막는다. 아래는 개인 PC에서 순서대로 한다.
+
+1. [ ] Supabase DB 비밀번호 재설정 (대화에 노출됨)
+2. [ ] 브랜치 `claude/dreamy-davinci-6mo4ik` 받기 → `pnpm install`
+3. [ ] `.env` 새로 만들기 (git에 없음)
+   - `DATABASE_URL`: Supabase 연결 문자열 (새 비밀번호)
+   - `SUPABASE_URL`: Supabase 프로젝트 URL
+4. [ ] `pnpm prisma migrate deploy` → `pnpm prisma generate`
+5. [ ] 테스트 사용자 추가 (`lib/auth.ts`의 `testUserId`) → `pnpm dev` → `bash scripts/api-regress.sh` 전부 통과 (2단계 완료)
+6. [ ] Supabase 로그인으로 받은 access token으로 `POST /api/me/init` 호출해 `getUserId` 확인 (4단계)
+7. [ ] 하드코딩된 `testUserId`를 `getUserId`로 교체 → `API_TOKEN=<토큰> bash scripts/api-regress.sh` (4단계)
+8. [ ] `apps/web` 이동, Expo 뼈대 (5단계)
+
 ## 1단계: 스키마 정리 (로컬, Supabase 이전 전)
 
 - [x] User.email null 허용 + UNIQUE 제거
